@@ -4,11 +4,10 @@ module.exports = (grunt) ->
 
     grunt.initConfig
         coffee:
-            app:
+            '01-html5-canvas':
                 options:
                     join: true
-                files:
-                    'dist/01-html5-canvas/app.js': ['01-html5-canvas/app.coffee']
+                files: [ 'dist/01-html5-canvas/app.js': '01-html5-canvas/*.coffee' ]
         connect: server: options:
             port: grunt.option('port') || 8080
             base: 'dist'

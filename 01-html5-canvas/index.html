@@ -11,21 +11,11 @@
             left: 0;
             top: 0;
         }
-        #controls {
-            position: relative;
-            z-index: 9999;
-        }
     </style>
 </head>
 
 <body>
-    <div id="controls">
-        <form name="controls">
-            <label for="boxSize">Box size: <span id="boxSize"></span></label><br />
-            <input type="range" value="25" min="5" max="1080" id="boxSizeInput" />
-        </form>
-    </div>
-    <canvas id="myCanvas" width="578" height="200"></canvas>
+    <canvas id="myCanvas"></canvas>
     <script src="../libs/jquery.js"></script>
     <script src="../libs/three.js"></script>
     <script src="app.js"></script>
