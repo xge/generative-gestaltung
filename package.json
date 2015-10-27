@@ -4,7 +4,7 @@
   "description": "Generative Gestaltung im Wintersemester 2015",
   "repository": {
     "type": "git",
-    "url": "git@cgmgit.beuth-hochschule.de:s61569/generative-gestaltung.git"
+    "url": "git@github.com:xge/generative-gestaltung.git"
   },
   "author": "Hagen Tarner <hagen.tarner@beuth-hochschule.de>",
   "license": "ISC",

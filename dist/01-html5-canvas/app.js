@@ -1,5 +1,5 @@
 (function() {
-  var RandomBoxes,
+  var MoireeLine, RandomBoxes,
     bind = function(fn, me){ return function(){ return fn.apply(me, arguments); }; };
 
   RandomBoxes = (function() {
@@ -77,10 +77,10 @@
     };
 
     Rect = (function() {
-      function Rect(context1, x, y, dir1) {
+      function Rect(context1, x1, y1, dir1) {
         this.context = context1;
-        this.x = x;
-        this.y = y;
+        this.x = x1;
+        this.y = y1;
         this.dir = dir1 != null ? dir1 : 1;
         this.draw = bind(this.draw, this);
         this.generateRandomOffset = bind(this.generateRandomOffset, this);
@@ -115,19 +115,65 @@
 
   })();
 
+  MoireeLine = (function() {
+    function MoireeLine(canvas1, context1) {
+      this.canvas = canvas1;
+      this.context = context1;
+      this.drawSine = bind(this.drawSine, this);
+      this.draw = bind(this.draw, this);
+      this.setUpAndStart = bind(this.setUpAndStart, this);
+      this.canvasResized = bind(this.canvasResized, this);
+      this.frameCount = 0;
+    }
+
+    MoireeLine.prototype.canvasResized = function(newCanvas) {
+      this.canvas = newCanvas;
+      return this.draw();
+    };
+
+    MoireeLine.prototype.setUpAndStart = function() {
+      return this.draw();
+    };
+
+    MoireeLine.prototype.draw = function() {
+      this.context.clearRect(0, 0, this.canvas.width, this.canvas.height);
+      this.context.beginPath();
+      this.drawSine(this.frameCount);
+      this.context.stroke();
+      this.context.closePath();
+      this.frameCount++;
+      return requestAnimationFrame(this.draw);
+    };
+
+    MoireeLine.prototype.drawSine = function(t) {
+      var x, y;
+      y = this.canvas.height / 2;
+      x = 0;
+      this.context.moveTo(x, y);
+      while (x <= this.canvas.width) {
+        x += this.canvas.width / t;
+        y = this.canvas.height / 2 + (this.canvas.height / 2 - 50) * Math.sin(x);
+        this.context.lineTo(x, y);
+      }
+    };
+
+    return MoireeLine;
+
+  })();
+
   $(function() {
     var canvas, context, visuals;
     canvas = $("#myCanvas")[0];
     canvas.height = window.innerHeight;
     canvas.width = window.innerWidth;
     context = canvas.getContext('2d');
-    visuals = [new RandomBoxes(canvas, context)];
+    visuals = [new RandomBoxes(canvas, context), new MoireeLine(canvas, context)];
     $(window).on("resize", function() {
       canvas.height = window.innerHeight;
       canvas.width = window.innerWidth;
-      return visuals[0].canvasResized(canvas);
+      return visuals[1].canvasResized(canvas);
     });
-    return visuals[0].setUpAndStart(canvas);
+    return visuals[1].setUpAndStart();
   });
 
 }).call(this);
