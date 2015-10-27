@@ -35,18 +35,17 @@ class RandomBoxes
             @rects.push new Rect(@context, @centerX, @boxSize * i, dir)
 
     setUpAndStart: =>
-        $("body").prepend """
-<div id="controls" style="position: relative; z-index: 9999;">
-    <form name="controls">
+        $("#controls form").append """
+    <div id="random-boxes">
         <label for="boxSize">Box size: <span id="boxSize"></span></label><br />
-        <input type="range" value="25" min="5" max="1080" id="boxSizeInput" />
-    </form>
-</div>
+        <input type="range" value="25" min="5" max="1080" id="boxSizeInput" /><br />
+    </div>
         """
 
         boxSizeInput = $ "#boxSizeInput"
         boxSizeInput.max = Math.floor(@canvas.height)
         boxSizeInput.on "input", @inputChanged
+        @boxSize = boxSizeInput.val()
 
         $("#boxSize").text @boxSize
 
@@ -59,7 +58,12 @@ class RandomBoxes
         rect.draw(@frameCount, @centerX, @centerY, @boxSize) for rect in @rects
 
         @frameCount++
-        requestAnimationFrame @draw
+        @rafId = requestAnimationFrame @draw
+
+    tearDown: =>
+        $("#boxSizeInput").off "input"
+        $("#random-boxes").remove()
+        window.cancelAnimationFrame @rafId
 
     # Inner class to model a single rectangle
     class Rect

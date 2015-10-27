@@ -1,5 +1,5 @@
 (function() {
-  var MoireeLine, RandomBoxes,
+  var MoireLine, RandomBoxes,
     bind = function(fn, me){ return function(){ return fn.apply(me, arguments); }; };
 
   RandomBoxes = (function() {
@@ -8,6 +8,7 @@
     function RandomBoxes(canvas1, context1) {
       this.canvas = canvas1;
       this.context = context1;
+      this.tearDown = bind(this.tearDown, this);
       this.draw = bind(this.draw, this);
       this.setUpAndStart = bind(this.setUpAndStart, this);
       this.generateBoxes = bind(this.generateBoxes, this);
@@ -55,10 +56,11 @@
 
     RandomBoxes.prototype.setUpAndStart = function() {
       var boxSizeInput;
-      $("body").prepend("<div id=\"controls\" style=\"position: relative; z-index: 9999;\">\n    <form name=\"controls\">\n        <label for=\"boxSize\">Box size: <span id=\"boxSize\"></span></label><br />\n        <input type=\"range\" value=\"25\" min=\"5\" max=\"1080\" id=\"boxSizeInput\" />\n    </form>\n</div>");
+      $("#controls form").append("<div id=\"random-boxes\">\n    <label for=\"boxSize\">Box size: <span id=\"boxSize\"></span></label><br />\n    <input type=\"range\" value=\"25\" min=\"5\" max=\"1080\" id=\"boxSizeInput\" /><br />\n</div>");
       boxSizeInput = $("#boxSizeInput");
       boxSizeInput.max = Math.floor(this.canvas.height);
       boxSizeInput.on("input", this.inputChanged);
+      this.boxSize = boxSizeInput.val();
       $("#boxSize").text(this.boxSize);
       this.generateBoxes();
       return this.draw();
@@ -73,7 +75,13 @@
         rect.draw(this.frameCount, this.centerX, this.centerY, this.boxSize);
       }
       this.frameCount++;
-      return requestAnimationFrame(this.draw);
+      return this.rafId = requestAnimationFrame(this.draw);
+    };
+
+    RandomBoxes.prototype.tearDown = function() {
+      $("#boxSizeInput").off("input");
+      $("#random-boxes").remove();
+      return window.cancelAnimationFrame(this.rafId);
     };
 
     Rect = (function() {
@@ -115,10 +123,11 @@
 
   })();
 
-  MoireeLine = (function() {
-    function MoireeLine(canvas1, context1) {
+  MoireLine = (function() {
+    function MoireLine(canvas1, context1) {
       this.canvas = canvas1;
       this.context = context1;
+      this.tearDown = bind(this.tearDown, this);
       this.drawSine = bind(this.drawSine, this);
       this.draw = bind(this.draw, this);
       this.setUpAndStart = bind(this.setUpAndStart, this);
@@ -126,26 +135,26 @@
       this.frameCount = 0;
     }
 
-    MoireeLine.prototype.canvasResized = function(newCanvas) {
+    MoireLine.prototype.canvasResized = function(newCanvas) {
       this.canvas = newCanvas;
       return this.draw();
     };
 
-    MoireeLine.prototype.setUpAndStart = function() {
+    MoireLine.prototype.setUpAndStart = function() {
       return this.draw();
     };
 
-    MoireeLine.prototype.draw = function() {
+    MoireLine.prototype.draw = function() {
       this.context.clearRect(0, 0, this.canvas.width, this.canvas.height);
       this.context.beginPath();
       this.drawSine(this.frameCount);
       this.context.stroke();
       this.context.closePath();
       this.frameCount++;
-      return requestAnimationFrame(this.draw);
+      return this.rafId = requestAnimationFrame(this.draw);
     };
 
-    MoireeLine.prototype.drawSine = function(t) {
+    MoireLine.prototype.drawSine = function(t) {
       var x, y;
       y = this.canvas.height / 2;
       x = 0;
@@ -157,23 +166,49 @@
       }
     };
 
-    return MoireeLine;
+    MoireLine.prototype.tearDown = function() {
+      return window.cancelAnimationFrame(this.rafId);
+    };
+
+    return MoireLine;
 
   })();
 
   $(function() {
-    var canvas, context, visuals;
+    var canvas, context, currentVis, form, j, len, visual, visuals;
     canvas = $("#myCanvas")[0];
     canvas.height = window.innerHeight;
     canvas.width = window.innerWidth;
     context = canvas.getContext('2d');
-    visuals = [new RandomBoxes(canvas, context), new MoireeLine(canvas, context)];
+    currentVis = 0;
+    visuals = [
+      {
+        id: 0,
+        name: "Random Boxes",
+        fn: new RandomBoxes(canvas, context)
+      }, {
+        id: 1,
+        name: "Moirée Line",
+        fn: new MoireLine(canvas, context)
+      }
+    ];
     $(window).on("resize", function() {
       canvas.height = window.innerHeight;
       canvas.width = window.innerWidth;
-      return visuals[1].canvasResized(canvas);
+      return visuals[currentVis].fn.canvasResized(canvas);
     });
-    return visuals[1].setUpAndStart();
+    form = $("#controls form");
+    form.prepend("<label for=\"visuals\">Select visual:</label><br />\n<select name=\"visuals\">\n</select><br />");
+    for (j = 0, len = visuals.length; j < len; j++) {
+      visual = visuals[j];
+      form.find("select").append("<option value=" + visual.id + ">" + visual.name + "</option>");
+    }
+    form.find("select").on("input", function() {
+      visuals[currentVis].fn.tearDown();
+      currentVis = form.find("select").val();
+      return visuals[currentVis].fn.setUpAndStart();
+    });
+    return visuals[currentVis].fn.setUpAndStart();
   });
 
 }).call(this);

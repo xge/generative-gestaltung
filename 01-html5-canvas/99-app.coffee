@@ -4,15 +4,39 @@ $ ->
     canvas.width = window.innerWidth
     context = canvas.getContext '2d'
 
+    currentVis = 0
+
     visuals = [
-        new RandomBoxes(canvas, context)
-        new MoireeLine(canvas, context)
+            id: 0
+            name: "Random Boxes"
+            fn: new RandomBoxes(canvas, context)
+        ,
+            id: 1
+            name: "Moirée Line"
+            fn: new MoireLine(canvas, context)
     ]
 
     # Add window.resize event handler
     $(window).on "resize", () ->
         canvas.height = window.innerHeight
         canvas.width = window.innerWidth
-        visuals[1].canvasResized canvas
+        visuals[currentVis].fn.canvasResized canvas
 
-    visuals[1].setUpAndStart()
+    # Add main app controls
+    form = $("#controls form")
+    form.prepend """
+    <label for="visuals">Select visual:</label><br />
+    <select name="visuals">
+    </select><br />
+    """
+
+    for visual in visuals
+        form.find("select").append "<option value=#{visual.id}>#{visual.name}</option>"
+
+    form.find("select").on "input", () ->
+        visuals[currentVis].fn.tearDown()
+        currentVis = form.find("select").val()
+        visuals[currentVis].fn.setUpAndStart()
+
+    # fire it up!
+    visuals[currentVis].fn.setUpAndStart()

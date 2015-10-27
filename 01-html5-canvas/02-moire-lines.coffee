@@ -1,4 +1,4 @@
-class MoireeLine
+class MoireLine
     constructor: (@canvas, @context) ->
         @frameCount = 0
 
@@ -18,7 +18,7 @@ class MoireeLine
         @context.closePath()
 
         @frameCount++
-        requestAnimationFrame @draw
+        @rafId = requestAnimationFrame @draw
 
     drawSine: (t) =>
         y = @canvas.height / 2
@@ -32,3 +32,6 @@ class MoireeLine
             @context.lineTo x, y
 
         return
+
+    tearDown: =>
+        window.cancelAnimationFrame @rafId
