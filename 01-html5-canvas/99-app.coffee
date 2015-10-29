@@ -4,7 +4,7 @@ $ ->
     canvas.width = window.innerWidth
     context = canvas.getContext '2d'
 
-    currentVis = 3
+    currentVis = 0
 
     visuals = [
             id: 0
