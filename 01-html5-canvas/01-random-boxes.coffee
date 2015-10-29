@@ -19,7 +19,6 @@ class RandomBoxes
         @centerX = @canvas.width / 2
         @centerY = @canvas.height / 2
         @generateBoxes()
-        console.log "window was resized"
 
     inputChanged: =>
         @boxSize = $("#boxSizeInput").val()

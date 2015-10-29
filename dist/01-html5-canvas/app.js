@@ -1,5 +1,5 @@
 (function() {
-  var MoireLine, RandomBoxes,
+  var CRCLS, MoireLine, RandomBoxes,
     bind = function(fn, me){ return function(){ return fn.apply(me, arguments); }; };
 
   RandomBoxes = (function() {
@@ -30,8 +30,7 @@
       this.canvas = newCanvas;
       this.centerX = this.canvas.width / 2;
       this.centerY = this.canvas.height / 2;
-      this.generateBoxes();
-      return console.log("window was resized");
+      return this.generateBoxes();
     };
 
     RandomBoxes.prototype.inputChanged = function() {
@@ -174,6 +173,92 @@
 
   })();
 
+  CRCLS = (function() {
+    var Circle;
+
+    function CRCLS(canvas1, context1) {
+      this.canvas = canvas1;
+      this.context = context1;
+      this.tearDown = bind(this.tearDown, this);
+      this.createCircleAtMousePos = bind(this.createCircleAtMousePos, this);
+      this.draw = bind(this.draw, this);
+      this.setUpAndStart = bind(this.setUpAndStart, this);
+      this.canvasResized = bind(this.canvasResized, this);
+      this.frameCount = 0;
+      this.circles = [];
+      this.circles.push(new Circle(this.canvas.width / 2, this.canvas.height / 2, this.canvas, this.context));
+    }
+
+    CRCLS.prototype.canvasResized = function(newCanvas) {
+      this.canvas = newCanvas;
+      return this.draw();
+    };
+
+    CRCLS.prototype.setUpAndStart = function() {
+      $("body").prepend("<div id=\"headline\">$(canvas).on 'click', () -> rain()</div>");
+      $(this.canvas).on("click", this.createCircleAtMousePos);
+      return this.draw();
+    };
+
+    CRCLS.prototype.draw = function() {
+      var circle, j, len, ref;
+      this.context.clearRect(0, 0, this.canvas.width, this.canvas.height);
+      ref = this.circles;
+      for (j = 0, len = ref.length; j < len; j++) {
+        circle = ref[j];
+        circle.draw();
+        circle.resize();
+      }
+      this.circles = this.circles.filter(function(circle) {
+        return circle.radius < circle.maxRadius;
+      });
+      this.frameCount++;
+      return this.rafId = requestAnimationFrame(this.draw);
+    };
+
+    CRCLS.prototype.createCircleAtMousePos = function(e) {
+      return this.circles.push(new Circle(e.pageX, e.pageY, this.canvas, this.context));
+    };
+
+    CRCLS.prototype.tearDown = function() {
+      $(this.canvas).off("click");
+      $("#headline").remove();
+      return window.cancelAnimationFrame(this.rafId);
+    };
+
+    Circle = (function() {
+      function Circle(x1, y1, canvas1, context1) {
+        this.x = x1;
+        this.y = y1;
+        this.canvas = canvas1;
+        this.context = context1;
+        this.radius = 0;
+        this.maxRadius = 250 + (this.canvas.height / 2) * Math.random();
+      }
+
+      Circle.prototype.draw = function() {
+        this.context.strokeStyle = "rgb(" + (0 + this.radius) + "," + (0 + this.radius) + "," + (0 + this.radius) + ")";
+        this.context.beginPath();
+        this.context.arc(this.x, this.y, this.radius, 0, 2 * Math.PI, true);
+        this.context.closePath();
+        return this.context.stroke();
+      };
+
+      Circle.prototype.resize = function() {
+        if (this.radius > this.maxRadius) {
+          this.radius = 0;
+        }
+        return this.radius++;
+      };
+
+      return Circle;
+
+    })();
+
+    return CRCLS;
+
+  })();
+
   $(function() {
     var canvas, context, currentVis, form, j, len, visual, visuals;
     canvas = $("#myCanvas")[0];
@@ -190,6 +275,10 @@
         id: 1,
         name: "Moirée Line",
         fn: new MoireLine(canvas, context)
+      }, {
+        id: 2,
+        name: "CRCLS",
+        fn: new CRCLS(canvas, context)
       }
     ];
     $(window).on("resize", function() {

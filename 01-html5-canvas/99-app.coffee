@@ -14,6 +14,10 @@ $ ->
             id: 1
             name: "Moirée Line"
             fn: new MoireLine(canvas, context)
+        ,
+            id: 2
+            name: "CRCLS"
+            fn: new CRCLS(canvas, context)
     ]
 
     # Add window.resize event handler
