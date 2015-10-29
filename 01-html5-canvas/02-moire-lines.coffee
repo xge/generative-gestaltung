@@ -2,11 +2,10 @@ class MoireLine
     constructor: (@canvas, @context) ->
         @frameCount = 0
 
-    canvasResized: (newCanvas) =>
-        @canvas = newCanvas
-        @draw()
+    canvasResized: (@canvas) =>
 
     setUpAndStart: =>
+        @context.strokeStyle = "black"
         @draw()
 
     draw: =>

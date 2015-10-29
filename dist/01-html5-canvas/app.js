@@ -1,5 +1,5 @@
 (function() {
-  var CRCLS, MoireLine, RandomBoxes,
+  var CRCLS, MoireLine, RandomBoxes, Spline,
     bind = function(fn, me){ return function(){ return fn.apply(me, arguments); }; };
 
   RandomBoxes = (function() {
@@ -134,12 +134,12 @@
       this.frameCount = 0;
     }
 
-    MoireLine.prototype.canvasResized = function(newCanvas) {
-      this.canvas = newCanvas;
-      return this.draw();
+    MoireLine.prototype.canvasResized = function(canvas1) {
+      this.canvas = canvas1;
     };
 
     MoireLine.prototype.setUpAndStart = function() {
+      this.context.strokeStyle = "black";
       return this.draw();
     };
 
@@ -189,9 +189,8 @@
       this.circles.push(new Circle(this.canvas.width / 2, this.canvas.height / 2, this.canvas, this.context));
     }
 
-    CRCLS.prototype.canvasResized = function(newCanvas) {
-      this.canvas = newCanvas;
-      return this.draw();
+    CRCLS.prototype.canvasResized = function(canvas1) {
+      this.canvas = canvas1;
     };
 
     CRCLS.prototype.setUpAndStart = function() {
@@ -259,13 +258,74 @@
 
   })();
 
+  Spline = (function() {
+    function Spline(canvas1, context1) {
+      this.canvas = canvas1;
+      this.context = context1;
+      this.tearDown = bind(this.tearDown, this);
+      this.draw = bind(this.draw, this);
+      this.clear = bind(this.clear, this);
+      this.setUpAndStart = bind(this.setUpAndStart, this);
+      this.canvasResized = bind(this.canvasResized, this);
+      this.frameCount = 0;
+      this.offsetX = 500;
+      this.offsetY = 500;
+      this.TO_RADIANS = Math.PI / 360;
+    }
+
+    Spline.prototype.canvasResized = function(canvas1) {
+      this.canvas = canvas1;
+    };
+
+    Spline.prototype.setUpAndStart = function() {
+      return this.draw();
+    };
+
+    Spline.prototype.clear = function(style) {
+      if (style == null) {
+        style = "rgba(255,255,255,0.03)";
+      }
+      this.context.save();
+      this.context.fillStyle = style;
+      this.context.fillRect(0, 0, this.canvas.width, this.canvas.height);
+      return this.context.restore();
+    };
+
+    Spline.prototype.draw = function() {
+      var x, y;
+      this.clear();
+      this.offsetX += 1;
+      this.offsetY += 2 + Math.random() * Math.random();
+      x = Math.sin(this.canvas.width + this.offsetX * this.TO_RADIANS) * this.canvas.width / 2;
+      y = Math.sin(this.canvas.height + this.offsetY * this.TO_RADIANS) * this.canvas.height / 2;
+      this.context.fillStyle = "magenta";
+      this.circle(x, y, 10);
+      this.frameCount++;
+      return this.rafId = requestAnimationFrame(this.draw);
+    };
+
+    Spline.prototype.circle = function(x, y, w) {
+      this.context.beginPath();
+      this.context.arc(this.canvas.width / 2 + x, this.canvas.height / 2 + y, w, 0, Math.PI * 2, true);
+      this.context.closePath();
+      return this.context.fill();
+    };
+
+    Spline.prototype.tearDown = function() {
+      return window.cancelAnimationFrame(this.rafId);
+    };
+
+    return Spline;
+
+  })();
+
   $(function() {
     var canvas, context, currentVis, form, j, len, visual, visuals;
     canvas = $("#myCanvas")[0];
     canvas.height = window.innerHeight;
     canvas.width = window.innerWidth;
     context = canvas.getContext('2d');
-    currentVis = 0;
+    currentVis = 3;
     visuals = [
       {
         id: 0,
@@ -279,6 +339,10 @@
         id: 2,
         name: "CRCLS",
         fn: new CRCLS(canvas, context)
+      }, {
+        id: 3,
+        name: "Spline",
+        fn: new Spline(canvas, context)
       }
     ];
     $(window).on("resize", function() {

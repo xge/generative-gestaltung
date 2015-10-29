@@ -4,9 +4,7 @@ class CRCLS
         @circles = []
         @circles.push new Circle(@canvas.width / 2, @canvas.height / 2, @canvas, @context)
 
-    canvasResized: (newCanvas) =>
-        @canvas = newCanvas
-        @draw()
+    canvasResized: (@canvas) =>
 
     setUpAndStart: =>
         $("body").prepend "<div id=\"headline\">$(canvas).on 'click', () -> rain()</div>"

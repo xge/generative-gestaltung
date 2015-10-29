@@ -4,7 +4,7 @@ $ ->
     canvas.width = window.innerWidth
     context = canvas.getContext '2d'
 
-    currentVis = 0
+    currentVis = 3
 
     visuals = [
             id: 0
@@ -18,6 +18,10 @@ $ ->
             id: 2
             name: "CRCLS"
             fn: new CRCLS(canvas, context)
+        ,
+            id: 3
+            name: "Spline"
+            fn: new Spline(canvas, context)
     ]
 
     # Add window.resize event handler
