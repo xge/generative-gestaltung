@@ -15,6 +15,10 @@
       this.inputChanged = bind(this.inputChanged, this);
       this.canvasResized = bind(this.canvasResized, this);
       this.frameCount = 0;
+      this.now = Date.now();
+      this.then = Date.now();
+      this.interval = 1000 / 30;
+      this.delta = 0;
       this.centerX = this.canvas.width / 2;
       this.centerY = this.canvas.height / (this.CONSTANTS = {
         RIGHT: 1,
@@ -33,8 +37,8 @@
       return this.generateBoxes();
     };
 
-    RandomBoxes.prototype.inputChanged = function() {
-      this.boxSize = $("#boxSizeInput").val();
+    RandomBoxes.prototype.inputChanged = function(e) {
+      this.boxSize = e.target.value;
       $("#boxSize").text(this.boxSize);
       return this.generateBoxes();
     };
@@ -55,7 +59,7 @@
 
     RandomBoxes.prototype.setUpAndStart = function() {
       var boxSizeInput;
-      $("#controls form").append("<div id=\"random-boxes\">\n    <label for=\"boxSize\">Box size: <span id=\"boxSize\"></span></label><br />\n    <input type=\"range\" value=\"25\" min=\"5\" max=\"1080\" id=\"boxSizeInput\" /><br />\n</div>");
+      $("#controls form").append("<div id=\"random-boxes\" class=\"form-group\">\n    <label for=\"boxSize\">Box size: <span id=\"boxSize\"></span></label><br />\n    <input class=\"form-control\" type=\"range\" value=\"25\" min=\"5\" max=\"1080\" id=\"boxSizeInput\" /><br />\n</div>");
       boxSizeInput = $("#boxSizeInput");
       boxSizeInput.max = Math.floor(this.canvas.height);
       boxSizeInput.on("input", this.inputChanged);
@@ -67,14 +71,19 @@
 
     RandomBoxes.prototype.draw = function() {
       var j, len, rect, ref;
-      this.context.clearRect(0, 0, this.canvas.width, this.canvas.height);
-      ref = this.rects;
-      for (j = 0, len = ref.length; j < len; j++) {
-        rect = ref[j];
-        rect.draw(this.frameCount, this.centerX, this.centerY, this.boxSize);
+      this.rafId = requestAnimationFrame(this.draw);
+      this.now = Date.now();
+      this.delta = this.now - this.then;
+      if (this.delta > this.interval) {
+        this.context.clearRect(0, 0, this.canvas.width, this.canvas.height);
+        ref = this.rects;
+        for (j = 0, len = ref.length; j < len; j++) {
+          rect = ref[j];
+          rect.draw(this.frameCount, this.centerX, this.centerY, this.boxSize);
+        }
+        this.frameCount++;
+        return this.then = this.now - (this.delta % this.interval);
       }
-      this.frameCount++;
-      return this.rafId = requestAnimationFrame(this.draw);
     };
 
     RandomBoxes.prototype.tearDown = function() {
@@ -96,7 +105,7 @@
       }
 
       Rect.prototype.generateRandomOffset = function() {
-        return this.randomOffsetX = Math.floor(Math.random() * 10.) + 1;
+        return this.randomOffsetX = Math.floor(Math.random() * 15.) + 1;
       };
 
       Rect.prototype.draw = function(frameCount, centerX, centerY, size) {
@@ -265,12 +274,16 @@
       this.tearDown = bind(this.tearDown, this);
       this.draw = bind(this.draw, this);
       this.clear = bind(this.clear, this);
+      this.brushSizeInput = bind(this.brushSizeInput, this);
+      this.fillStyleInput = bind(this.fillStyleInput, this);
       this.setUpAndStart = bind(this.setUpAndStart, this);
       this.canvasResized = bind(this.canvasResized, this);
       this.frameCount = 0;
-      this.offsetX = 500;
-      this.offsetY = 500;
+      this.offsetX = 0;
+      this.offsetY = 0;
       this.TO_RADIANS = Math.PI / 360;
+      this.fillStyle = "magenta";
+      this.brushSize = 20;
     }
 
     Spline.prototype.canvasResized = function(canvas1) {
@@ -278,7 +291,19 @@
     };
 
     Spline.prototype.setUpAndStart = function() {
+      $("#controls form").append("<div id=\"spline\">\n    <div class=\"form-group\">\n        <label for=\"fillStyleInput\">FillStyle</label>\n        <input class=\"form-control\" type=\"text\" value=\"magenta\" id=\"fillStyleInput\" />\n    </div>\n    <div class=\"form-group\">\n        <label for=\"brushSizeInput\">Brush size</label>\n        <input class=\"form-control\" type=\"number\" value=\"20\" min=\"5\" max=\"50\" id=\"brushSizeInput\" />\n    </div>\n</div>");
+      $("#fillStyleInput").on("input", this.fillStyleInput);
+      $("#brushSizeInput").on("input", this.brushSizeInput);
+      this.clear("white");
       return this.draw();
+    };
+
+    Spline.prototype.fillStyleInput = function(e) {
+      return this.fillStyle = e.target.value;
+    };
+
+    Spline.prototype.brushSizeInput = function(e) {
+      return this.brushSize = e.target.value;
     };
 
     Spline.prototype.clear = function(style) {
@@ -294,12 +319,12 @@
     Spline.prototype.draw = function() {
       var x, y;
       this.clear();
-      this.offsetX += 1;
-      this.offsetY += 2 + Math.random() * Math.random();
+      this.offsetX += 2;
+      this.offsetY += 1 + Math.random() * Math.random();
       x = Math.sin(this.canvas.width + this.offsetX * this.TO_RADIANS) * this.canvas.width / 2;
       y = Math.sin(this.canvas.height + this.offsetY * this.TO_RADIANS) * this.canvas.height / 2;
-      this.context.fillStyle = "magenta";
-      this.circle(x, y, 10);
+      this.context.fillStyle = this.fillStyle;
+      this.circle(x, y, this.brushSize);
       this.frameCount++;
       return this.rafId = requestAnimationFrame(this.draw);
     };
@@ -312,6 +337,7 @@
     };
 
     Spline.prototype.tearDown = function() {
+      $("#spline").remove();
       return window.cancelAnimationFrame(this.rafId);
     };
 
@@ -351,7 +377,7 @@
       return visuals[currentVis].fn.canvasResized(canvas);
     });
     form = $("#controls form");
-    form.prepend("<label for=\"visuals\">Select visual:</label><br />\n<select name=\"visuals\">\n</select><br />");
+    form.prepend("<div class=\"form-group\">\n    <label for=\"visuals\">Select visual:</label>\n    <select class=\"form-control\" id=\"visuals\"></select>\n</form>");
     for (j = 0, len = visuals.length; j < len; j++) {
       visual = visuals[j];
       form.find("select").append("<option value=" + visual.id + ">" + visual.name + "</option>");

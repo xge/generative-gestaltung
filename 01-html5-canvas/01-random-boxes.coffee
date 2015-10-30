@@ -2,6 +2,10 @@ class RandomBoxes
 
     constructor: (@canvas, @context) ->
         @frameCount = 0
+        @now = Date.now()
+        @then = Date.now()
+        @interval = 1000 / 30
+        @delta = 0
         @centerX = @canvas.width / 2
         @centerY = @canvas.height /
 
@@ -20,8 +24,8 @@ class RandomBoxes
         @centerY = @canvas.height / 2
         @generateBoxes()
 
-    inputChanged: =>
-        @boxSize = $("#boxSizeInput").val()
+    inputChanged: (e) =>
+        @boxSize = e.target.value
         $("#boxSize").text @boxSize
         @generateBoxes()
 
@@ -35,9 +39,9 @@ class RandomBoxes
 
     setUpAndStart: =>
         $("#controls form").append """
-    <div id="random-boxes">
+    <div id="random-boxes" class="form-group">
         <label for="boxSize">Box size: <span id="boxSize"></span></label><br />
-        <input type="range" value="25" min="5" max="1080" id="boxSizeInput" /><br />
+        <input class="form-control" type="range" value="25" min="5" max="1080" id="boxSizeInput" /><br />
     </div>
         """
 
@@ -52,12 +56,20 @@ class RandomBoxes
         @draw()
 
     draw: =>
-        @context.clearRect 0, 0, @canvas.width, @canvas.height
-
-        rect.draw(@frameCount, @centerX, @centerY, @boxSize) for rect in @rects
-
-        @frameCount++
         @rafId = requestAnimationFrame @draw
+
+        @now = Date.now()
+        @delta = @now - @then
+
+        if @delta > @interval
+
+            @context.clearRect 0, 0, @canvas.width, @canvas.height
+
+            rect.draw(@frameCount, @centerX, @centerY, @boxSize) for rect in @rects
+
+            @frameCount++
+            @then = @now - (@delta % @interval)
+
 
     tearDown: =>
         $("#boxSizeInput").off "input"
@@ -71,7 +83,7 @@ class RandomBoxes
             @generateRandomOffset()
 
         generateRandomOffset: () =>
-            @randomOffsetX = Math.floor(Math.random() * (10)) + 1
+            @randomOffsetX = Math.floor(Math.random() * (15)) + 1
 
         draw: (frameCount, centerX, centerY, size) =>
             offsetX = 75 * Math.sin(frameCount * 0.02) * @randomOffsetX

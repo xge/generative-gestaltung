@@ -33,9 +33,10 @@ $ ->
     # Add main app controls
     form = $("#controls form")
     form.prepend """
-    <label for="visuals">Select visual:</label><br />
-    <select name="visuals">
-    </select><br />
+    <div class="form-group">
+        <label for="visuals">Select visual:</label>
+        <select class="form-control" id="visuals"></select>
+    </form>
     """
 
     for visual in visuals
