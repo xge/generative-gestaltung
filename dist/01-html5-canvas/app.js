@@ -291,7 +291,7 @@
     };
 
     Spline.prototype.setUpAndStart = function() {
-      $("#controls form").append("<div id=\"spline\">\n    <div class=\"form-group\">\n        <label for=\"fillStyleInput\">FillStyle</label>\n        <input class=\"form-control\" type=\"text\" value=\"magenta\" id=\"fillStyleInput\" />\n    </div>\n    <div class=\"form-group\">\n        <label for=\"brushSizeInput\">Brush size</label>\n        <input class=\"form-control\" type=\"number\" value=\"20\" min=\"5\" max=\"50\" id=\"brushSizeInput\" />\n    </div>\n</div>");
+      $("#controls form").append("<div id=\"spline\">\n    <div class=\"form-group\">\n        <label for=\"fillStyleInput\">FillStyle</label>\n        <input class=\"form-control\" type=\"text\" value=\"" + this.fillStyle + "\" id=\"fillStyleInput\" />\n    </div>\n    <div class=\"form-group\">\n        <label for=\"brushSizeInput\">Brush size</label>\n        <input class=\"form-control\" type=\"range\" value=\"20\" min=\"5\" max=\"50\" id=\"brushSizeInput\" />\n    </div>\n</div>");
       $("#fillStyleInput").on("input", this.fillStyleInput);
       $("#brushSizeInput").on("input", this.brushSizeInput);
       this.clear("white");
@@ -382,7 +382,7 @@
       visual = visuals[j];
       form.find("select").append("<option value=" + visual.id + ">" + visual.name + "</option>");
     }
-    form.find("select").on("input", function() {
+    form.find("select").change(function(e) {
       visuals[currentVis].fn.tearDown();
       currentVis = form.find("select").val();
       return visuals[currentVis].fn.setUpAndStart();

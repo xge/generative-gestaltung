@@ -42,7 +42,7 @@ $ ->
     for visual in visuals
         form.find("select").append "<option value=#{visual.id}>#{visual.name}</option>"
 
-    form.find("select").on "input", () ->
+    form.find("select").change (e) ->
         visuals[currentVis].fn.tearDown()
         currentVis = form.find("select").val()
         visuals[currentVis].fn.setUpAndStart()

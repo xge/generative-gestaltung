@@ -14,11 +14,11 @@ class Spline
     <div id="spline">
         <div class="form-group">
             <label for="fillStyleInput">FillStyle</label>
-            <input class="form-control" type="text" value="magenta" id="fillStyleInput" />
+            <input class="form-control" type="text" value="#{ @fillStyle }" id="fillStyleInput" />
         </div>
         <div class="form-group">
             <label for="brushSizeInput">Brush size</label>
-            <input class="form-control" type="number" value="20" min="5" max="50" id="brushSizeInput" />
+            <input class="form-control" type="range" value="20" min="5" max="50" id="brushSizeInput" />
         </div>
     </div>
         """
@@ -50,8 +50,8 @@ class Spline
         x = Math.sin(@canvas.width + @offsetX * @TO_RADIANS) * @canvas.width / 2
         y = Math.sin(@canvas.height + @offsetY * @TO_RADIANS) * @canvas.height / 2
 
-        @context.fillStyle = @fillStyle # TOOD: parameterize
-        @circle x, y, @brushSize  # TOOD: parameterize
+        @context.fillStyle = @fillStyle
+        @circle x, y, @brushSize
 
         @frameCount++
         @rafId = requestAnimationFrame @draw
