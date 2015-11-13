@@ -21,3 +21,8 @@ Anschließend kann via _grunt_ ein lokaler Server gestartet und das Ergebnis unt
 
 Aufgabenstellung: https://github.com/generative-gestaltung/WS-2015/blob/master/uebungszettel01__ss15.pdf  
 Meine Lösung: [/01-html5-canvas](/01-html5-canvas)
+
+## Zettel 2: Partikel und Blending
+
+Aufgabenstellung: https://github.com/generative-gestaltung/WS-2015/blob/master/uebungszettel02__ws15.pdf  
+Meine Lösung: [/02-particles](/02-particles)
