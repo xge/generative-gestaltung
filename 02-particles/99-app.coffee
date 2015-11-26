@@ -4,10 +4,10 @@ $ ->
     canvas.width = window.innerWidth
     context = canvas.getContext '2d'
 
-    maxParticles = 1500
+    maxParticles = 10000
     particleSize = 2
     emissionRate = 10
-    objectSize = 3
+    objectSize = 5
 
     particles = []
     midX = canvas.width / 2
@@ -18,8 +18,8 @@ $ ->
     ]
 
     fields = [
-        new Field(new Vector(midX - 300, midY + 20), 900)
-        new Field(new Vector(midX - 200, midY + 10), -75)
+        new Field(new Vector(midX - 100, midY), 450)
+        new Field(new Vector(midX - 200, midY), -75)
     ]
 
     addNewParticles = () ->
@@ -53,8 +53,8 @@ $ ->
         context.fill()
 
     drawParticles = () ->
-        context.fillStyle = "rgb(129,129,129)"
         for particle in particles
+            context.fillStyle = particle.color.toString()
             pos = particle.position
             context.fillRect pos.x, pos.y, particleSize, particleSize
 

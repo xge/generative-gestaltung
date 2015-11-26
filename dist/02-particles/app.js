@@ -1,11 +1,11 @@
 (function() {
-  var Emitter, Field, Particle, Vector,
+  var Color, Emitter, Field, Particle, Vector,
     bind = function(fn, me){ return function(){ return fn.apply(me, arguments); }; };
 
   Vector = (function() {
-    function Vector(x, y) {
-      this.x = x != null ? x : 0;
-      this.y = y != null ? y : 0;
+    function Vector(x1, y1) {
+      this.x = x1 != null ? x1 : 0;
+      this.y = y1 != null ? y1 : 0;
       this.getAngle = bind(this.getAngle, this);
       this.getMagnitude = bind(this.getMagnitude, this);
       this.add = bind(this.add, this);
@@ -32,36 +32,23 @@
 
   })();
 
-  Particle = (function() {
-    function Particle(position1, velocity1, acceleration) {
-      this.position = position1 != null ? position1 : new Vector(0, 0);
-      this.velocity = velocity1 != null ? velocity1 : new Vector(0, 0);
-      this.acceleration = acceleration != null ? acceleration : new Vector(0, 0);
-      this.submitToFields = bind(this.submitToFields, this);
-      this.move = bind(this.move, this);
+  Color = (function() {
+    function Color(r, g, b, a) {
+      this.r = r;
+      this.g = g;
+      this.b = b;
+      this.a = a != null ? a : 1.0;
     }
 
-    Particle.prototype.move = function() {
-      this.velocity.add(this.acceleration);
-      return this.position.add(this.velocity);
+    Color.prototype.toString = function() {
+      return "rgba(" + this.r + ", " + this.g + ", " + this.b + ", " + this.a + ")";
     };
 
-    Particle.prototype.submitToFields = function(fields) {
-      var field, force, i, len, totalAccelerationX, totalAccelerationY, vectorX, vectorY;
-      totalAccelerationX = 0;
-      totalAccelerationY = 0;
-      for (i = 0, len = fields.length; i < len; i++) {
-        field = fields[i];
-        vectorX = field.position.x - this.position.x;
-        vectorY = field.position.y - this.position.y;
-        force = field.mass / Math.pow(vectorX * vectorX + vectorY * vectorY, 1.5);
-        totalAccelerationX += vectorX * force;
-        totalAccelerationY += vectorY * force;
-      }
-      return this.acceleration = new Vector(totalAccelerationX, totalAccelerationY);
+    Color.blend = function(x, y, value) {
+      return new Color(Math.round(x.r * (1 - value) + y.r * value), Math.round(x.g * (1 - value) + y.g * value), Math.round(x.b * (1 - value) + y.b * value), Math.round(x.a * (1 - value) + y.a * value));
     };
 
-    return Particle;
+    return Color;
 
   })();
 
@@ -103,21 +90,57 @@
 
   })();
 
+  Particle = (function() {
+    Particle.color = new Color(129, 129, 129);
+
+    function Particle(position1, velocity1, acceleration) {
+      this.position = position1 != null ? position1 : new Vector(0, 0);
+      this.velocity = velocity1 != null ? velocity1 : new Vector(0, 0);
+      this.acceleration = acceleration != null ? acceleration : new Vector(0, 0);
+      this.submitToFields = bind(this.submitToFields, this);
+      this.move = bind(this.move, this);
+    }
+
+    Particle.prototype.move = function() {
+      this.velocity.add(this.acceleration);
+      return this.position.add(this.velocity);
+    };
+
+    Particle.prototype.submitToFields = function(fields) {
+      var field, force, i, len, totalAccelerationX, totalAccelerationY, vectorX, vectorY;
+      totalAccelerationX = 0;
+      totalAccelerationY = 0;
+      for (i = 0, len = fields.length; i < len; i++) {
+        field = fields[i];
+        vectorX = field.position.x - this.position.x;
+        vectorY = field.position.y - this.position.y;
+        force = field.mass / Math.pow(vectorX * vectorX + vectorY * vectorY, 1.5);
+        totalAccelerationX += vectorX * force;
+        totalAccelerationY += vectorY * force;
+      }
+      this.acceleration = new Vector(totalAccelerationX, totalAccelerationY);
+      return this.color = Color.blend(new Color(255, 0, 0), new Color(0, 0, 255), this.acceleration.getMagnitude() * 20);
+    };
+
+    return Particle;
+
+  })();
+
   $(function() {
     var addNewParticles, canvas, clear, context, draw, drawCircle, drawLoop, drawParticles, emissionRate, emitters, fields, maxParticles, midX, midY, objectSize, particleSize, particles, plotParticles, queue, update;
     canvas = canvas = $("#myCanvas")[0];
     canvas.height = window.innerHeight;
     canvas.width = window.innerWidth;
     context = canvas.getContext('2d');
-    maxParticles = 1500;
+    maxParticles = 10000;
     particleSize = 2;
     emissionRate = 10;
-    objectSize = 3;
+    objectSize = 5;
     particles = [];
     midX = canvas.width / 2;
     midY = canvas.height / 2;
     emitters = [new Emitter(new Vector(midX - 150, midY), Vector.fromAngle(6, 2), Math.PI)];
-    fields = [new Field(new Vector(midX - 300, midY + 20), 900), new Field(new Vector(midX - 200, midY + 10), -75)];
+    fields = [new Field(new Vector(midX - 100, midY), 450), new Field(new Vector(midX - 200, midY), -75)];
     addNewParticles = function() {
       var emitter, i, j, len, results;
       if (particles.length > maxParticles) {
@@ -161,10 +184,10 @@
     };
     drawParticles = function() {
       var i, len, particle, pos, results;
-      context.fillStyle = "rgb(129,129,129)";
       results = [];
       for (i = 0, len = particles.length; i < len; i++) {
         particle = particles[i];
+        context.fillStyle = particle.color.toString();
         pos = particle.position;
         results.push(context.fillRect(pos.x, pos.y, particleSize, particleSize));
       }

@@ -1,4 +1,7 @@
 class Particle
+
+    @color = new Color(129, 129, 129)
+
     constructor: (@position = new Vector(0, 0), @velocity = new Vector(0, 0), @acceleration = new Vector(0, 0)) ->
 
     move: () =>
@@ -19,3 +22,4 @@ class Particle
             totalAccelerationY += vectorY * force
 
         @acceleration = new Vector totalAccelerationX, totalAccelerationY
+        @color = Color.blend(new Color(255, 0, 0), new Color(0, 0, 255), @acceleration.getMagnitude() * 20)
