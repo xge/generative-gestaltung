@@ -5,17 +5,30 @@
     <meta charset="utf-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <link href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.5/css/bootstrap.min.css" rel="stylesheet" integrity="sha256-MfvZlkHCEqatNoGiOXveE8FIwMzZg4W85qfrfIFBfYc= sha512-dTfge/zgoMYpP7QbHy4gWMEGsbsdZeCXz7irItjcC3sPUFtf0kuFbDz/ixG7ArTxmDjLXDmezHubeNikyKGVyQ==" crossorigin="anonymous">
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/css/bootstrap.min.css" integrity="sha384-1q8mTJOASx8j1Au+a5WDVnPi2lkFfwwEAa8hDDdjZlpLegxhjVME1fgjWPGmkzs7" crossorigin="anonymous">
     <style media="screen">
         canvas {
             position: absolute;
             left: 0;
             top: 0;
         }
+        form {
+            position: relative;
+            z-index: 666;
+        }
     </style>
 </head>
 
 <body>
+    <div class="container">
+        <form name="controls">
+            <div class="checkbox">
+                <label>
+                    <input name="isRendering" type="checkbox" checked> Animate?
+                </label>
+            </div>
+        </form>
+    </div>
     <canvas id="myCanvas"></canvas>
     <script src="../libs/jquery.js"></script>
     <script src="app.js"></script>

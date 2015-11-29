@@ -1,13 +1,30 @@
 (function() {
-  var Color, Emitter, Field, Particle, Vector,
+  var Color, Emitter, Field, Helper, Particle, Vector,
     bind = function(fn, me){ return function(){ return fn.apply(me, arguments); }; };
+
+  Helper = (function() {
+    function Helper() {}
+
+    Helper.clamp = function(value, min, max) {
+      if (min == null) {
+        min = 1;
+      }
+      if (max == null) {
+        max = 10;
+      }
+      return Math.min(Math.max(value, min), max);
+    };
+
+    return Helper;
+
+  })();
 
   Vector = (function() {
     function Vector(x1, y1) {
       this.x = x1 != null ? x1 : 0;
       this.y = y1 != null ? y1 : 0;
       this.getAngle = bind(this.getAngle, this);
-      this.getMagnitude = bind(this.getMagnitude, this);
+      this.getLength = bind(this.getLength, this);
       this.add = bind(this.add, this);
     }
 
@@ -16,7 +33,7 @@
       return this.y += vector.y;
     };
 
-    Vector.prototype.getMagnitude = function() {
+    Vector.prototype.getLength = function() {
       return Math.sqrt(this.x * this.x + this.y * this.y);
     };
 
@@ -24,8 +41,8 @@
       return Math.atan2(this.y, this.x);
     };
 
-    Vector.fromAngle = function(angle, magnitude) {
-      return new Vector(magnitude * Math.cos(angle), magnitude * Math.sin(angle));
+    Vector.fromAngle = function(angle, length) {
+      return new Vector(length * Math.cos(angle), length * Math.sin(angle));
     };
 
     return Vector;
@@ -45,6 +62,7 @@
     };
 
     Color.blend = function(x, y, value) {
+      value = Helper.clamp(0, 1, value);
       return new Color(Math.round(x.r * (1 - value) + y.r * value), Math.round(x.g * (1 - value) + y.g * value), Math.round(x.b * (1 - value) + y.b * value), Math.round(x.a * (1 - value) + y.a * value));
     };
 
@@ -78,11 +96,11 @@
     }
 
     Emitter.prototype.emitParticle = function() {
-      var angle, magnitude, position, velocity;
+      var angle, length, position, velocity;
       angle = this.velocity.getAngle() + this.spread - (Math.random() * this.spread * 2);
-      magnitude = this.velocity.getMagnitude();
+      length = this.velocity.getLength();
       position = new Vector(this.position.x, this.position.y);
-      velocity = Vector.fromAngle(angle, magnitude);
+      velocity = Vector.fromAngle(angle, length);
       return new Particle(position, velocity);
     };
 
@@ -93,12 +111,14 @@
   Particle = (function() {
     Particle.color = new Color(129, 129, 129);
 
-    function Particle(position1, velocity1, acceleration) {
+    function Particle(position1, velocity1, acceleration, size) {
       this.position = position1 != null ? position1 : new Vector(0, 0);
       this.velocity = velocity1 != null ? velocity1 : new Vector(0, 0);
       this.acceleration = acceleration != null ? acceleration : new Vector(0, 0);
-      this.submitToFields = bind(this.submitToFields, this);
+      this.size = size != null ? size : 20;
+      this.calculateForces = bind(this.calculateForces, this);
       this.move = bind(this.move, this);
+      this.originalSize = this.size;
     }
 
     Particle.prototype.move = function() {
@@ -106,7 +126,7 @@
       return this.position.add(this.velocity);
     };
 
-    Particle.prototype.submitToFields = function(fields) {
+    Particle.prototype.calculateForces = function(fields) {
       var field, force, i, len, totalAccelerationX, totalAccelerationY, vectorX, vectorY;
       totalAccelerationX = 0;
       totalAccelerationY = 0;
@@ -119,7 +139,9 @@
         totalAccelerationY += vectorY * force;
       }
       this.acceleration = new Vector(totalAccelerationX, totalAccelerationY);
-      return this.color = Color.blend(new Color(255, 0, 0), new Color(0, 0, 255), this.acceleration.getMagnitude() * 20);
+      this.acc = this.acceleration.getLength();
+      this.color = Color.blend(new Color(32, 32, 32), new Color(192, 192, 192), this.acc * 20);
+      return this.size = this.originalSize / Helper.clamp(this.acc * 20, 1, 4);
     };
 
     return Particle;
@@ -127,20 +149,23 @@
   })();
 
   $(function() {
-    var addNewParticles, canvas, clear, context, draw, drawCircle, drawLoop, drawParticles, emissionRate, emitters, fields, maxParticles, midX, midY, objectSize, particleSize, particles, plotParticles, queue, update;
+    var addNewParticles, canvas, clear, context, draw, drawCircle, drawLoop, drawParticles, emissionRate, emitters, fields, haltAnimation, maxParticles, midX, midY, objectSize, particles, queue, update, updateParticles;
     canvas = canvas = $("#myCanvas")[0];
     canvas.height = window.innerHeight;
     canvas.width = window.innerWidth;
     context = canvas.getContext('2d');
-    maxParticles = 10000;
-    particleSize = 2;
+    haltAnimation = false;
+    $("input[name=isRendering]").change(function(e) {
+      return haltAnimation = !haltAnimation;
+    });
+    maxParticles = 200;
     emissionRate = 10;
     objectSize = 5;
     particles = [];
     midX = canvas.width / 2;
     midY = canvas.height / 2;
-    emitters = [new Emitter(new Vector(midX - 150, midY), Vector.fromAngle(6, 2), Math.PI)];
-    fields = [new Field(new Vector(midX - 100, midY), 450), new Field(new Vector(midX - 200, midY), -75)];
+    emitters = [new Emitter(new Vector(midX, midY), Vector.fromAngle(0, 2), Math.PI)];
+    fields = [new Field(new Vector(midX + 300, midY), 450), new Field(new Vector(midX - 300, midY), 450), new Field(new Vector(midX - 600, midY - 300), -450), new Field(new Vector(midX - 300, midY - 300), -450), new Field(new Vector(midX, midY - 300), -450), new Field(new Vector(midX + 300, midY - 300), -450), new Field(new Vector(midX + 600, midY - 300), -450), new Field(new Vector(midX - 600, midY + 300), -450), new Field(new Vector(midX - 300, midY + 300), -450), new Field(new Vector(midX, midY + 300), -450), new Field(new Vector(midX + 300, midY + 300), -450), new Field(new Vector(midX + 600, midY + 300), -450), new Field(new Vector(midX - 600, midY), -450), new Field(new Vector(midX + 600, midY), -450)];
     addNewParticles = function() {
       var emitter, i, j, len, results;
       if (particles.length > maxParticles) {
@@ -152,7 +177,7 @@
         results.push((function() {
           var k, ref, results1;
           results1 = [];
-          for (j = k = 0, ref = emissionRate; 0 <= ref ? k <= ref : k >= ref; j = 0 <= ref ? ++k : --k) {
+          for (j = k = 1, ref = emissionRate; 1 <= ref ? k <= ref : k >= ref; j = 1 <= ref ? ++k : --k) {
             results1.push(particles.push(emitter.emitParticle()));
           }
           return results1;
@@ -160,7 +185,7 @@
       }
       return results;
     };
-    plotParticles = function(boundsX, boundsY) {
+    updateParticles = function(boundsX, boundsY) {
       var currentParticles, i, len, particle, pos;
       currentParticles = new Array();
       for (i = 0, len = particles.length; i < len; i++) {
@@ -169,7 +194,7 @@
         if (pos.x < 0 || pos.x > boundsX || pos.y < 0 || pos.y > boundsY) {
           continue;
         }
-        particle.submitToFields(fields);
+        particle.calculateForces(fields);
         particle.move();
         currentParticles.push(particle);
       }
@@ -189,7 +214,7 @@
         particle = particles[i];
         context.fillStyle = particle.color.toString();
         pos = particle.position;
-        results.push(context.fillRect(pos.x, pos.y, particleSize, particleSize));
+        results.push(context.fillRect(pos.x, pos.y, particle.size, particle.size));
       }
       return results;
     };
@@ -198,7 +223,7 @@
     };
     update = function() {
       addNewParticles();
-      return plotParticles(canvas.width, canvas.height);
+      return updateParticles(canvas.width, canvas.height);
     };
     draw = function() {
       drawParticles();
@@ -209,9 +234,11 @@
       return requestAnimationFrame(drawLoop);
     };
     return (drawLoop = function() {
-      clear();
-      update();
-      draw();
+      if (!haltAnimation) {
+        clear();
+        update();
+        draw();
+      }
       return queue();
     })();
   });

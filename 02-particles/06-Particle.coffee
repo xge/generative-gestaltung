@@ -2,13 +2,14 @@ class Particle
 
     @color = new Color(129, 129, 129)
 
-    constructor: (@position = new Vector(0, 0), @velocity = new Vector(0, 0), @acceleration = new Vector(0, 0)) ->
+    constructor: (@position = new Vector(0, 0), @velocity = new Vector(0, 0), @acceleration = new Vector(0, 0), @size = 20) ->
+        @originalSize = @size
 
     move: () =>
         @velocity.add @acceleration
         @position.add @velocity
 
-    submitToFields: (fields) =>
+    calculateForces: (fields) =>
         totalAccelerationX = 0
         totalAccelerationY = 0
 
@@ -22,4 +23,6 @@ class Particle
             totalAccelerationY += vectorY * force
 
         @acceleration = new Vector totalAccelerationX, totalAccelerationY
-        @color = Color.blend(new Color(255, 0, 0), new Color(0, 0, 255), @acceleration.getMagnitude() * 20)
+        @acc = @acceleration.getLength() # short-hand
+        @color = Color.blend(new Color(32, 32, 32), new Color(192, 192, 192), @acc * 20)
+        @size = @originalSize / Helper.clamp(@acc * 20, 1, 4)

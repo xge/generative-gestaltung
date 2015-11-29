@@ -6,6 +6,7 @@ class Color
         "rgba(#{@r}, #{@g}, #{@b}, #{@a})"
 
     @blend: (x, y, value) ->
+        value = Helper.clamp(0, 1, value)
         new Color(
             Math.round(x.r * (1 - value) + y.r * value),
             Math.round(x.g * (1 - value) + y.g * value),
