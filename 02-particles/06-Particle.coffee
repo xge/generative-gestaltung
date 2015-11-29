@@ -24,5 +24,5 @@ class Particle
 
         @acceleration = new Vector totalAccelerationX, totalAccelerationY
         @acc = @acceleration.getLength() # short-hand
-        @color = Color.blend(new Color(32, 32, 32), new Color(192, 192, 192), @acc * 20)
-        @size = @originalSize / Helper.clamp(@acc * 20, 1, 4)
+        @color = Color.blend(new Color(32, 32, 32), new Color(192, 192, 192), @acc * 20) # the closer a force field gets the brighter the particle will be
+        @size = @originalSize / Helper.clamp(@acc * 20, 1, 4) # the closer a force field comes the smaller the particle will be
