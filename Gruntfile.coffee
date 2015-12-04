@@ -16,6 +16,10 @@ module.exports = (grunt) ->
                 options:
                     join: true
                 files: [ 'dist/03-keyframes/app.js': '03-keyframes/*.coffee' ]
+            '04-endless-blend':
+                options:
+                    join: true
+                files: [ 'dist/04-endless-blend/app.js': '04-endless-blend/*.coffee' ]
         connect: server: options:
             port: grunt.option('port') || 8080
             base: 'dist'
@@ -23,7 +27,7 @@ module.exports = (grunt) ->
             html:
                 files: [
                     expand: true
-                    src: ['index.html', '01-html5-canvas/**/*.html', '02-particles/**/*.html', '03-keyframes/**/*.html']
+                    src: ['index.html', '01-html5-canvas/**/*.html', '02-particles/**/*.html', '03-keyframes/**/*.html', '04-endless-blend/**/*.html']
                     dest: 'dist/'
                 ]
             jquery:
