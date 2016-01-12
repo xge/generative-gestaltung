@@ -1,12 +1,13 @@
 class App
     constructor: ->
         @scene = new THREE.Scene()
-        @scene.fog = new THREE.Fog(0x000000, 100, 1500)
+        @scene.fog = new THREE.Fog(0xffffff, 100, 1500)
 
         @camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 1, 10000)
         @camera.position.z = 50
 
         @renderer = new THREE.WebGLRenderer( antialias: true )
+        @renderer.setClearColor @scene.fog.color
         @renderer.setSize(window.innerWidth, window.innerHeight)
         @renderer.setPixelRatio window.devicePixelRatio
         document.body.appendChild @renderer.domElement
@@ -14,7 +15,7 @@ class App
         geometry = new THREE.Geometry()
 
         PI2 = Math.PI * 2
-        material = new THREE.SpriteMaterial color: 0xffffff, fog: true
+        material = new THREE.SpriteMaterial color: 0x000000, fog: true
 
         for i in [0..100]
             particle = new THREE.Sprite material
@@ -31,7 +32,7 @@ class App
         line = new THREE.Line(
             geometry,
             new THREE.LineBasicMaterial(
-                color: 0xffffff,
+                color: 0x000000,
                 opacity: 0.5
             )
         )
@@ -43,8 +44,13 @@ class App
 
         effect = new THREE.ShaderPass THREE.RGBShiftShader
         effect.uniforms['amount'].value = 0.002
-        effect.renderToScreen = true
         @composer.addPass effect
+
+        vignette = new THREE.ShaderPass THREE.VignetteShader
+        vignette.uniforms['offset'].value = 0.6
+        vignette.uniforms['darkness'].value = 0.5
+        vignette.renderToScreen = true
+        @composer.addPass vignette
 
         @animate()
 

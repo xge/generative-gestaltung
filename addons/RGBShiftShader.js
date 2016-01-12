@@ -42,8 +42,8 @@ THREE.RGBShiftShader = {
 		"varying vec2 vUv;",
 
 		"void main() {",
-
-			"vec2 offset = amount * vec2( cos(angle), sin(angle));",
+			"float dist = distance( vUv, vec2( 0.5 ) );",
+			"vec2 offset = dist * (amount * vec2( cos(angle), sin(angle)));",
 			"vec4 cr = texture2D(tDiffuse, vUv + offset);",
 			"vec4 cga = texture2D(tDiffuse, vUv);",
 			"vec4 cb = texture2D(tDiffuse, vUv - offset);",
