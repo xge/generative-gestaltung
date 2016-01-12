@@ -7,19 +7,27 @@ module.exports = (grunt) ->
             '01-html5-canvas':
                 options:
                     join: true
-                files: [ 'dist/01-html5-canvas/app.js': '01-html5-canvas/*.coffee' ]
+                files: [ 'dist/01-html5-canvas/app.js': 'src/01-html5-canvas/*.coffee' ]
             '02-particles':
                 options:
                     join: true
-                files: [ 'dist/02-particles/app.js': '02-particles/*.coffee' ]
+                files: [ 'dist/02-particles/app.js': 'src/02-particles/*.coffee' ]
             '03-keyframes':
                 options:
                     join: true
-                files: [ 'dist/03-keyframes/app.js': '03-keyframes/*.coffee' ]
+                files: [ 'dist/03-keyframes/app.js': 'src/03-keyframes/*.coffee' ]
             '04-endless-blend':
                 options:
                     join: true
-                files: [ 'dist/04-endless-blend/app.js': '04-endless-blend/*.coffee' ]
+                files: [ 'dist/04-endless-blend/app.js': 'src/04-endless-blend/*.coffee' ]
+            '05-abgabe':
+                options:
+                    join: true
+                files: [ 'dist/05-abgabe/app.js': 'src/05-abgabe/*.coffee' ]
+        concat:
+            addons:
+                src: ['addons/**/*.js']
+                dest: 'dist/libs/addons.js'
         connect: server: options:
             port: grunt.option('port') || 8080
             base: 'dist'
@@ -27,7 +35,8 @@ module.exports = (grunt) ->
             html:
                 files: [
                     expand: true
-                    src: ['index.html', '01-html5-canvas/**/*.html', '02-particles/**/*.html', '03-keyframes/**/*.html', '04-endless-blend/**/*.html']
+                    cwd: 'src/'
+                    src: ['**/*html']
                     dest: 'dist/'
                 ]
             jquery:
@@ -42,11 +51,11 @@ module.exports = (grunt) ->
                 ]
         watch:
             html:
-                files: ['**/*.html']
+                files: 'src/**/*.html'
                 tasks: ['copy:html']
             coffee:
                 files: ['**/*.coffee']
                 tasks: ['coffee']
 
-    grunt.registerTask 'serve', ['coffee', 'copy', 'connect', 'watch']
+    grunt.registerTask 'serve', ['coffee', 'concat', 'copy', 'connect', 'watch']
     grunt.registerTask 'default', ['serve']
