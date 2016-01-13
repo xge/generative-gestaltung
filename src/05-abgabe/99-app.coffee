@@ -1,5 +1,9 @@
 class App
     constructor: ->
+        width = window.innerWidth
+        halfWidth = Math.ceil(width/2)
+        height = window.innerHeight
+
         @clock = new THREE.Clock()
         @clock.start()
 
@@ -8,12 +12,12 @@ class App
         @scene = new THREE.Scene()
         @scene.fog = new THREE.Fog(0xffffff, 1, 1500)
 
-        @camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 1, 10000)
+        @camera = new THREE.PerspectiveCamera(75, width / height, 1, width * 10)
         @camera.position.z = 50
 
         @renderer = new THREE.WebGLRenderer( antialias: true )
         @renderer.setClearColor @scene.fog.color
-        @renderer.setSize(window.innerWidth, window.innerHeight)
+        @renderer.setSize width, height
         @renderer.setPixelRatio window.devicePixelRatio
         document.body.appendChild @renderer.domElement
 
@@ -22,14 +26,14 @@ class App
         PI2 = Math.PI * 2
         material = new THREE.SpriteMaterial color: 0x000000, fog: true
 
-        for i in [0..75]
+        for i in [0..width/20]
             particle = new THREE.Sprite material
             particle.position.x = Math.random() * 2 - 1
             particle.position.y = Math.random() * 2 - 1
             particle.position.z = Math.random() * 2 - 1
             particle.position.normalize()
-            particle.position.multiplyScalar( Math.random() * 1000 + 1000 )
-            particle.scale.x = particle.scale.y = 50
+            particle.position.multiplyScalar( Math.random() * halfWidth + halfWidth )
+            particle.scale.x = particle.scale.y = Math.ceil width/40
             @scene.add particle
 
             geometry.vertices.push particle.position
@@ -45,7 +49,7 @@ class App
         @scene.add line
 
         @black = new THREE.Mesh(
-            new THREE.IcosahedronGeometry(350, 1)
+            new THREE.IcosahedronGeometry(Math.ceil(width / 5), 1)
             new THREE.MeshBasicMaterial
                 color: 0x000000
                 wireframe: true
@@ -53,13 +57,6 @@ class App
         )
         @black.position.set 0, 0, 0
         @scene.add @black
-
-        light = new THREE.AmbientLight 0x404040
-        @scene.add light
-
-        directionalLight = new THREE.DirectionalLight 0xffffff, 0.5
-        directionalLight.position.set 0, 200, 0
-        @scene.add directionalLight
 
         # post processing
         @composer = new THREE.EffectComposer @renderer
@@ -82,11 +79,11 @@ class App
         requestAnimationFrame @animate
 
         val = Math.sin(performance.now() * 0.0001) * 250
-        @camera.position.set val, val, val + 250
+        @camera.position.set val, val, val + Math.ceil(window.innerWidth / 4)
         @camera.lookAt new THREE.Vector3 0
 
         if @clock.getElapsedTime() > 10
-            @rotateVal += 0.001 if @rotateVal < 0.1
+            @rotateVal += 0.001 if @rotateVal < 0.05
             @black.rotateY @rotateVal
 
         @composer.render @scene, @camera
