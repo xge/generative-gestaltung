@@ -5,7 +5,6 @@ class App
         height = window.innerHeight
 
         @clock = new THREE.Clock()
-        @clock.start()
 
         @rotateVal = 0
 
@@ -13,7 +12,23 @@ class App
         @scene.fog = new THREE.Fog(0xffffff, 1, 1500)
 
         @camera = new THREE.PerspectiveCamera(75, width / height, 1, width * 10)
-        @camera.position.z = 50
+        @camera.position.y = 50
+        @camera.position.z = height * 3
+        @camera.lookAt new THREE.Vector3 0
+
+        intro = new THREE.Mesh(
+            new THREE.TextGeometry(
+                "Linien",
+                height: 15
+            )
+            new THREE.MeshPhongMaterial color: 0x000000
+        )
+        intro.position.x = 15
+        intro.position.z = height * 2.5
+        @scene.add intro
+
+        light = new THREE.AmbientLight 0x404040
+        @scene.add light
 
         @renderer = new THREE.WebGLRenderer( antialias: true )
         @renderer.setClearColor @scene.fog.color
@@ -67,22 +82,23 @@ class App
         effect.uniforms['angle'].value = 45
         @composer.addPass effect
 
-        vignette = new THREE.ShaderPass THREE.VignetteShader
-        vignette.uniforms['offset'].value = 0.6
-        vignette.uniforms['darkness'].value = 0.5
-        vignette.renderToScreen = true
-        @composer.addPass vignette
+        @vignette = new THREE.ShaderPass THREE.VignetteShader
+        @vignette.uniforms['offset'].value = 0.5
+        @vignette.uniforms['darkness'].value = 0
+        @vignette.renderToScreen = true
+        @composer.addPass @vignette
 
         @animate()
 
     animate: =>
         requestAnimationFrame @animate
 
-        val = Math.sin(performance.now() * 0.0001) * 250
-        @camera.position.set val, val, val + Math.ceil(window.innerWidth / 4)
-        @camera.lookAt new THREE.Vector3 0
+        if @clock.getElapsedTime() < 38
+            @camera.position.z--
+            @vignette.uniforms['darkness'].value += 0.001 if @vignette.uniforms['darkness'].value < 0.5
 
-        if @clock.getElapsedTime() > 10
+        if @clock.getElapsedTime() > 40
+            # start spinning the thing
             @rotateVal += 0.001 if @rotateVal < 0.05
             @black.rotateY @rotateVal
 
