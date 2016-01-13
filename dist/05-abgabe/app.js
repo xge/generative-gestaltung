@@ -39,12 +39,14 @@
       }
       line = new THREE.Line(geometry, new THREE.LineBasicMaterial({
         color: 0x000000,
-        opacity: 0.5
+        opacity: 0.5,
+        linewidth: 0.1
       }));
       this.scene.add(line);
       this.black = new THREE.Mesh(new THREE.IcosahedronGeometry(350, 1), new THREE.MeshBasicMaterial({
         color: 0x000000,
-        wireframe: true
+        wireframe: true,
+        wireframeLinewidth: 10
       }));
       this.black.position.set(0, 0, 0);
       this.scene.add(this.black);

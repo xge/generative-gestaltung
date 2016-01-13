@@ -39,6 +39,7 @@ class App
             new THREE.LineBasicMaterial(
                 color: 0x000000
                 opacity: 0.5
+                linewidth: 0.1
             )
         )
         @scene.add line
@@ -48,6 +49,7 @@ class App
             new THREE.MeshBasicMaterial
                 color: 0x000000
                 wireframe: true
+                wireframeLinewidth: 10
         )
         @black.position.set 0, 0, 0
         @scene.add @black
