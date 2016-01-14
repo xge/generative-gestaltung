@@ -20,9 +20,9 @@ Anschließend kann via _grunt_ ein lokaler Server gestartet und das Ergebnis unt
 ## Zettel 1: Einführung html5 canvas
 
 Aufgabenstellung: https://github.com/generative-gestaltung/WS-2015/blob/master/uebungszettel01__ss15.pdf
-Meine Lösung: [/src/01-html5-canvas](/01-html5-canvas)
+Meine Lösung: [/src/01-html5-canvas](/src/01-html5-canvas)
 
 ## Zettel 2: Partikel und Blending
 
 Aufgabenstellung: https://github.com/generative-gestaltung/WS-2015/blob/master/uebungszettel02__ws15.pdf
-Meine Lösung: [/src/02-particles](/02-particles)
+Meine Lösung: [/src/02-particles](/src/02-particles)
