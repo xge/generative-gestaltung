@@ -15,7 +15,7 @@
       this.scene.fog = new THREE.Fog(0xffffff, 1, 1500);
       this.camera = new THREE.PerspectiveCamera(75, width / height, 1, width * 10);
       this.camera.position.y = 50;
-      this.camera.position.z = height * 3;
+      this.camera.position.z = 3000;
       this.camera.lookAt(new THREE.Vector3(0));
       intro = new THREE.Mesh(new THREE.TextGeometry("Linien", {
         height: 15
@@ -23,7 +23,7 @@
         color: 0x000000
       }));
       intro.position.x = 15;
-      intro.position.z = height * 2.5;
+      intro.position.z = 2500;
       this.scene.add(intro);
       light = new THREE.AmbientLight(0x404040);
       this.scene.add(light);

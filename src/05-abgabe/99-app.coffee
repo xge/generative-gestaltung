@@ -13,7 +13,7 @@ class App
 
         @camera = new THREE.PerspectiveCamera(75, width / height, 1, width * 10)
         @camera.position.y = 50
-        @camera.position.z = height * 3
+        @camera.position.z = 3000
         @camera.lookAt new THREE.Vector3 0
 
         intro = new THREE.Mesh(
@@ -24,7 +24,7 @@ class App
             new THREE.MeshPhongMaterial color: 0x000000
         )
         intro.position.x = 15
-        intro.position.z = height * 2.5
+        intro.position.z = 2500
         @scene.add intro
 
         light = new THREE.AmbientLight 0x404040
