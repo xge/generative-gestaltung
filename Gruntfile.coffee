@@ -24,6 +24,10 @@ module.exports = (grunt) ->
                 options:
                     join: true
                 files: [ 'dist/05-three/app.js': 'src/05-three/*.coffee' ]
+            '06-tapeten':
+                options:
+                    join: true
+                files: [ 'dist/06-tapeten/app.js': 'src/06-tapeten/*.coffee' ]
         concat:
             addons:
                 src: ['addons/**/*.js']
