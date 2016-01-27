@@ -16,16 +16,16 @@ class App
         @camera.position.z = 3000
         @camera.lookAt new THREE.Vector3 0
 
-        intro = new THREE.Mesh(
+        @intro = new THREE.Mesh(
             new THREE.TextGeometry(
                 "Linien",
                 height: 15
             )
             new THREE.MeshPhongMaterial color: 0x000000
         )
-        intro.position.x = 15
-        intro.position.z = 2500
-        @scene.add intro
+        @intro.position.x = 15
+        @intro.position.z = 2500
+        @scene.add @intro
 
         light = new THREE.AmbientLight 0x404040
         @scene.add light

@@ -16,6 +16,7 @@ $ ->
     clear = () ->
         context.clearRect 0, 0, canvas.width, canvas.height
 
+    # TODO: endless loop via t % KEYFRAMES.length or something
     updateKeyFrame = () ->
         $("#frameCounter").text t
 

@@ -20,10 +20,10 @@ module.exports = (grunt) ->
                 options:
                     join: true
                 files: [ 'dist/04-endless-blend/app.js': 'src/04-endless-blend/*.coffee' ]
-            '05-abgabe':
+            '05-three':
                 options:
                     join: true
-                files: [ 'dist/05-abgabe/app.js': 'src/05-abgabe/*.coffee' ]
+                files: [ 'dist/05-three/app.js': 'src/05-three/*.coffee' ]
         concat:
             addons:
                 src: ['addons/**/*.js']

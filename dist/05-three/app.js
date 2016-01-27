@@ -5,7 +5,7 @@
   App = (function() {
     function App() {
       this.animate = bind(this.animate, this);
-      var PI2, effect, geometry, halfWidth, height, i, intro, j, light, line, material, particle, ref, width;
+      var PI2, effect, geometry, halfWidth, height, i, j, light, line, material, particle, ref, width;
       width = window.innerWidth;
       halfWidth = Math.ceil(width / 2);
       height = window.innerHeight;
@@ -17,14 +17,14 @@
       this.camera.position.y = 50;
       this.camera.position.z = 3000;
       this.camera.lookAt(new THREE.Vector3(0));
-      intro = new THREE.Mesh(new THREE.TextGeometry("Linien", {
+      this.intro = new THREE.Mesh(new THREE.TextGeometry("Linien", {
         height: 15
       }), new THREE.MeshPhongMaterial({
         color: 0x000000
       }));
-      intro.position.x = 15;
-      intro.position.z = 2500;
-      this.scene.add(intro);
+      this.intro.position.x = 15;
+      this.intro.position.z = 2500;
+      this.scene.add(this.intro);
       light = new THREE.AmbientLight(0x404040);
       this.scene.add(light);
       this.renderer = new THREE.WebGLRenderer({
