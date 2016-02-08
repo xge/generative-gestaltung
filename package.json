@@ -18,7 +18,8 @@
     "grunt-contrib-watch": "^0.6.1",
     "grunt-notify": "^0.4.3",
     "load-grunt-tasks": "^3.4.0",
-    "three": "^0.73.0"
+    "three": "^0.73.0",
+    "voronoi": "gorhill/Javascript-Voronoi"
   },
   "dependencies": {
     "jquery": "^2.2.0"

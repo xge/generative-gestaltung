@@ -28,6 +28,10 @@ module.exports = (grunt) ->
                 options:
                     join: true
                 files: [ 'dist/06-tapeten/app.js': 'src/06-tapeten/*.coffee' ]
+            '07-voronoi':
+                options:
+                    join: true
+                files: [ 'dist/07-voronoi/app.js': 'src/07-voronoi/*.coffee' ]
         concat:
             addons:
                 src: ['addons/**/*.js']
@@ -52,6 +56,11 @@ module.exports = (grunt) ->
                 files: [
                     src: ['node_modules/three/three.js']
                     dest: 'dist/libs/three.js'
+                ]
+            voronoi:
+                files: [
+                    src: ['node_modules/voronoi/rhill-voronoi-core.js']
+                    dest: 'dist/libs/rhill-voronoi-core.js'
                 ]
         watch:
             html:
