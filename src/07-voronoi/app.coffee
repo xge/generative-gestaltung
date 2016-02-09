@@ -1,15 +1,12 @@
-bbox = undefined
-canvas = undefined
-ctx = undefined
-id = undefined
-diagram = undefined
+bbox = canvas = ctx = id = diagram = undefined
+drawPoints = false
+drawLine = true
 points = []
 lines = []
 voronoi = new Voronoi
-margin = 0
-t = 0
-str = 'rgba(255, 255, 255, 0.025)'
-fil = 'rgba(20, 20, 20, 0.025)'
+margin = t = N_POINTS = 0
+str = 'rgba(255, 255, 255, 0.1)'
+fil = 'rgba(20, 20, 20, 1.0)'
 mou = 'rgba(20, 40, 100, 0.3)'
 lin = 'rgba(20, 40, 100, 0.5)'
 
@@ -24,7 +21,6 @@ init = ->
   ctx.fillStyle = fil
   ctx.fillRect 0, 0, canvas.width, canvas.height
   ctx.lineWidth = 1
-  # ctx.globalAlpha = 0.03
   # init bounding box
   bbox =
     left: 0
@@ -32,8 +28,8 @@ init = ->
     top: 0
     bottom: canvas.height
   # kick off the computing and rendering
-  n = Math.ceil(canvas.width / 50)
-  generatePoints n
+  N_POINTS = Math.ceil(canvas.width / 50)
+  generatePoints N_POINTS
   render()
 
 generatePoints = (n) ->
@@ -76,19 +72,27 @@ addPoint = (e) ->
         event.pageY = event.clientY + (doc and doc.scrollTop or body and body.scrollTop or 0) - (doc and doc.clientTop or body and body.clientTop or 0)
 
     lines.push
-        x: event.pageX
-        y: event.pageY
+       x: event.pageX
+       y: event.pageY
+
+    points.push
+        x: event.pageX + 100 * Math.random()
+        y: event.pageY + 100 * Math.random()
+        c: mou
 
     points.push
         x: event.pageX
         y: event.pageY
         c: mou
 
+    points.push
+        x: event.pageX - 100 * Math.random()
+        y: event.pageY - 100 * Math.random()
+        c: mou
+
 
 render = () ->
-    # ctx.clearRect(0, 0, canvas.width, canvas.height);
-    # ctx.fillStyle = "rgba(20, 20, 20, 0.05)"
-    # ctx.fillRect 0, 0, canvas.width, canvas.height
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
 
     if t % 60 is 0
         # Generate two new points each time render() gets called and delete the oldest two points
@@ -96,7 +100,7 @@ render = () ->
         points.splice 0, NEW
         i = 0
         while (i < NEW)
-            points.push generatePoint(fil)
+            points.push generatePoint(fil) if points.length < N_POINTS
             i++
 
         # make sure there is a point at each screen corner
@@ -124,12 +128,13 @@ render = () ->
             ctx.strokeStyle = str
             ctx.stroke()
 
-    for point in points
-        ctx.fillStyle = str
-        size = 4
-        ctx.fillRect point.x, point.y, size, size
+    if drawPoints
+        for point in points
+            ctx.fillStyle = str
+            size = 4
+            ctx.fillRect point.x, point.y, size, size
 
-    if lines.length > 0
+    if drawLine and lines.length > 0
         ctx.beginPath()
         ctx.moveTo lines[0].x, lines[0].y
         for line in lines

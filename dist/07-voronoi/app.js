@@ -1,15 +1,11 @@
 (function() {
-  var addPoint, bbox, canvas, ctx, diagram, fil, generateCorners, generatePoint, generatePoints, id, init, lin, lines, margin, mou, points, render, str, t, voronoi;
+  var N_POINTS, addPoint, bbox, canvas, ctx, diagram, drawLine, drawPoints, fil, generateCorners, generatePoint, generatePoints, id, init, lin, lines, margin, mou, points, render, str, t, voronoi;
 
-  bbox = void 0;
+  bbox = canvas = ctx = id = diagram = void 0;
 
-  canvas = void 0;
+  drawPoints = false;
 
-  ctx = void 0;
-
-  id = void 0;
-
-  diagram = void 0;
+  drawLine = true;
 
   points = [];
 
@@ -17,20 +13,17 @@
 
   voronoi = new Voronoi;
 
-  margin = 0;
+  margin = t = N_POINTS = 0;
 
-  t = 0;
+  str = 'rgba(255, 255, 255, 0.1)';
 
-  str = 'rgba(255, 255, 255, 0.025)';
-
-  fil = 'rgba(20, 20, 20, 0.025)';
+  fil = 'rgba(20, 20, 20, 1.0)';
 
   mou = 'rgba(20, 40, 100, 0.3)';
 
   lin = 'rgba(20, 40, 100, 0.5)';
 
   init = function() {
-    var n;
     canvas = document.getElementsByTagName('canvas')[0];
     canvas.height = window.innerHeight;
     canvas.width = window.innerWidth;
@@ -45,8 +38,8 @@
       top: 0,
       bottom: canvas.height
     };
-    n = Math.ceil(canvas.width / 50);
-    generatePoints(n);
+    N_POINTS = Math.ceil(canvas.width / 50);
+    generatePoints(N_POINTS);
     return render();
   };
 
@@ -105,21 +98,34 @@
       x: event.pageX,
       y: event.pageY
     });
-    return points.push({
+    points.push({
+      x: event.pageX + 100 * Math.random(),
+      y: event.pageY + 100 * Math.random(),
+      c: mou
+    });
+    points.push({
       x: event.pageX,
       y: event.pageY,
+      c: mou
+    });
+    return points.push({
+      x: event.pageX - 100 * Math.random(),
+      y: event.pageY - 100 * Math.random(),
       c: mou
     });
   };
 
   render = function() {
     var NEW, cell, halfEdge, halfEdges, i, j, k, l, len, len1, len2, len3, line, m, point, ref, size, v;
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
     if (t % 60 === 0) {
       NEW = 1;
       points.splice(0, NEW);
       i = 0;
       while (i < NEW) {
-        points.push(generatePoint(fil));
+        if (points.length < N_POINTS) {
+          points.push(generatePoint(fil));
+        }
         i++;
       }
       generateCorners();
@@ -146,13 +152,15 @@
         ctx.stroke();
       }
     }
-    for (l = 0, len2 = points.length; l < len2; l++) {
-      point = points[l];
-      ctx.fillStyle = str;
-      size = 4;
-      ctx.fillRect(point.x, point.y, size, size);
+    if (drawPoints) {
+      for (l = 0, len2 = points.length; l < len2; l++) {
+        point = points[l];
+        ctx.fillStyle = str;
+        size = 4;
+        ctx.fillRect(point.x, point.y, size, size);
+      }
     }
-    if (lines.length > 0) {
+    if (drawLine && lines.length > 0) {
       ctx.beginPath();
       ctx.moveTo(lines[0].x, lines[0].y);
       for (m = 0, len3 = lines.length; m < len3; m++) {
