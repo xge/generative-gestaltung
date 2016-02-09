@@ -1,5 +1,5 @@
 (function() {
-  var bbox, canvas, ctx, diagram, fil, generateCorners, generatePoint, generatePoints, id, init, margin, points, render, str, voronoi;
+  var addPoint, bbox, canvas, ctx, diagram, fil, generateCorners, generatePoint, generatePoints, id, init, lin, lines, margin, mou, points, render, str, t, voronoi;
 
   bbox = void 0;
 
@@ -13,30 +13,39 @@
 
   points = [];
 
+  lines = [];
+
   voronoi = new Voronoi;
 
   margin = 0;
 
-  str = '#eee';
+  t = 0;
 
-  fil = '#36f';
+  str = 'rgba(255, 255, 255, 0.025)';
+
+  fil = 'rgba(20, 20, 20, 0.025)';
+
+  mou = 'rgba(20, 40, 100, 0.3)';
+
+  lin = 'rgba(20, 40, 100, 0.5)';
 
   init = function() {
     var n;
     canvas = document.getElementsByTagName('canvas')[0];
     canvas.height = window.innerHeight;
     canvas.width = window.innerWidth;
+    canvas.onclick = addPoint;
     ctx = canvas.getContext('2d');
     ctx.fillStyle = fil;
     ctx.fillRect(0, 0, canvas.width, canvas.height);
-    ctx.globalAlpha = 0.1;
+    ctx.lineWidth = 1;
     bbox = {
       left: 0,
       right: canvas.width,
       top: 0,
       bottom: canvas.height
     };
-    n = Math.ceil(canvas.width / 10);
+    n = Math.ceil(canvas.width / 50);
     generatePoints(n);
     return render();
   };
@@ -83,19 +92,41 @@
     };
   };
 
-  render = function() {
-    var NEW, cell, halfEdge, halfEdges, i, j, k, len, len1, ref, v;
-    NEW = 2;
-    points.splice(0, NEW);
-    i = 0;
-    while (i < NEW) {
-      points.push(generatePoint(fil));
-      i++;
+  addPoint = function(e) {
+    var body, doc, eventDoc;
+    if (event.pageX === null && event.clientX !== null) {
+      eventDoc = event.target && event.target.ownerDocument || document;
+      doc = eventDoc.documentElement;
+      body = eventDoc.body;
+      event.pageX = event.clientX + (doc && doc.scrollLeft || body && body.scrollLeft || 0) - (doc && doc.clientLeft || body && body.clientLeft || 0);
+      event.pageY = event.clientY + (doc && doc.scrollTop || body && body.scrollTop || 0) - (doc && doc.clientTop || body && body.clientTop || 0);
     }
-    generateCorners();
-    voronoi.recycle(diagram);
-    diagram = voronoi.compute(points, bbox);
-    points.splice(points.length - 4, 4);
+    lines.push({
+      x: event.pageX,
+      y: event.pageY
+    });
+    return points.push({
+      x: event.pageX,
+      y: event.pageY,
+      c: mou
+    });
+  };
+
+  render = function() {
+    var NEW, cell, halfEdge, halfEdges, i, j, k, l, len, len1, len2, len3, line, m, point, ref, size, v;
+    if (t % 60 === 0) {
+      NEW = 1;
+      points.splice(0, NEW);
+      i = 0;
+      while (i < NEW) {
+        points.push(generatePoint(fil));
+        i++;
+      }
+      generateCorners();
+      voronoi.recycle(diagram);
+      diagram = voronoi.compute(points, bbox);
+      points.splice(points.length - 4, 4);
+    }
     ctx.save();
     ref = diagram.cells;
     for (j = 0, len = ref.length; j < len; j++) {
@@ -110,12 +141,30 @@
         ctx.lineTo(v.x, v.y);
         ctx.fillStyle = cell.site.c;
         ctx.fill();
+        ctx.lineWidth = 1;
         ctx.strokeStyle = str;
         ctx.stroke();
       }
     }
+    for (l = 0, len2 = points.length; l < len2; l++) {
+      point = points[l];
+      ctx.fillStyle = str;
+      size = 4;
+      ctx.fillRect(point.x, point.y, size, size);
+    }
+    if (lines.length > 0) {
+      ctx.beginPath();
+      ctx.moveTo(lines[0].x, lines[0].y);
+      for (m = 0, len3 = lines.length; m < len3; m++) {
+        line = lines[m];
+        ctx.lineTo(line.x, line.y);
+      }
+      ctx.lineWidth = 5;
+      ctx.strokeStyle = lin;
+      ctx.stroke();
+    }
     ctx.restore();
-    return window.setTimeout(render, 200);
+    return t = requestAnimationFrame(render);
   };
 
   init();
