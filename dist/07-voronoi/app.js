@@ -5,13 +5,13 @@
 
   drawPoints = false;
 
-  drawLine = true;
+  drawLine = false;
 
   points = [];
 
   lines = [];
 
-  voronoi = new Voronoi;
+  voronoi = new Voronoi();
 
   margin = t = N_POINTS = 0;
 
@@ -33,12 +33,12 @@
     ctx.fillRect(0, 0, canvas.width, canvas.height);
     ctx.lineWidth = 1;
     bbox = {
-      left: 0,
-      right: canvas.width,
-      top: 0,
-      bottom: canvas.height
+      xl: 0,
+      xr: canvas.width,
+      yt: 0,
+      yb: canvas.height
     };
-    N_POINTS = Math.ceil(canvas.width / 50);
+    N_POINTS = Math.ceil(canvas.width / 40);
     generatePoints(N_POINTS);
     return render();
   };
@@ -47,7 +47,7 @@
     var i, results;
     i = 0;
     results = [];
-    while (i < n - 4) {
+    while (i < n) {
       points.push(generatePoint(fil));
       results.push(i++);
     }
@@ -98,63 +98,47 @@
       x: event.pageX,
       y: event.pageY
     });
-    points.push({
-      x: event.pageX + 100 * Math.random(),
-      y: event.pageY + 100 * Math.random(),
-      c: mou
-    });
-    points.push({
+    return points.push({
       x: event.pageX,
       y: event.pageY,
-      c: mou
-    });
-    return points.push({
-      x: event.pageX - 100 * Math.random(),
-      y: event.pageY - 100 * Math.random(),
       c: mou
     });
   };
 
   render = function() {
-    var NEW, cell, halfEdge, halfEdges, i, j, k, l, len, len1, len2, len3, line, m, point, ref, size, v;
+    var cell, halfEdge, halfEdges, i, j, k, l, len, len1, len2, len3, len4, line, m, o, point, ref, size, v;
     ctx.clearRect(0, 0, canvas.width, canvas.height);
-    if (t % 60 === 0) {
-      NEW = 1;
-      points.splice(0, NEW);
-      i = 0;
-      while (i < NEW) {
-        if (points.length < N_POINTS) {
-          points.push(generatePoint(fil));
-        }
-        i++;
-      }
-      generateCorners();
-      voronoi.recycle(diagram);
-      diagram = voronoi.compute(points, bbox);
-      points.splice(points.length - 4, 4);
+    for (i = j = 0, len = points.length; j < len; i = ++j) {
+      point = points[i];
+      point.x += Math.sin(t / 100 + i) / 10;
+      point.y += Math.sin(t / 100 + i) / 10;
     }
+    voronoi.recycle(diagram);
+    diagram = voronoi.compute(points, bbox);
     ctx.save();
     ref = diagram.cells;
-    for (j = 0, len = ref.length; j < len; j++) {
-      cell = ref[j];
+    for (k = 0, len1 = ref.length; k < len1; k++) {
+      cell = ref[k];
       halfEdges = cell.halfedges;
-      v = halfEdges[0].getStartpoint();
-      ctx.beginPath();
-      ctx.moveTo(v.x, v.y);
-      for (k = 0, len1 = halfEdges.length; k < len1; k++) {
-        halfEdge = halfEdges[k];
-        v = halfEdge.getEndpoint();
-        ctx.lineTo(v.x, v.y);
-        ctx.fillStyle = cell.site.c;
-        ctx.fill();
-        ctx.lineWidth = 1;
-        ctx.strokeStyle = str;
-        ctx.stroke();
+      if (halfEdges.length > 2) {
+        v = halfEdges[0].getStartpoint();
+        ctx.beginPath();
+        ctx.moveTo(v.x, v.y);
+        for (l = 0, len2 = halfEdges.length; l < len2; l++) {
+          halfEdge = halfEdges[l];
+          v = halfEdge.getEndpoint();
+          ctx.lineTo(v.x, v.y);
+          ctx.fillStyle = cell.site.c;
+          ctx.fill();
+          ctx.lineWidth = 1;
+          ctx.strokeStyle = str;
+          ctx.stroke();
+        }
       }
     }
     if (drawPoints) {
-      for (l = 0, len2 = points.length; l < len2; l++) {
-        point = points[l];
+      for (m = 0, len3 = points.length; m < len3; m++) {
+        point = points[m];
         ctx.fillStyle = str;
         size = 4;
         ctx.fillRect(point.x, point.y, size, size);
@@ -163,8 +147,8 @@
     if (drawLine && lines.length > 0) {
       ctx.beginPath();
       ctx.moveTo(lines[0].x, lines[0].y);
-      for (m = 0, len3 = lines.length; m < len3; m++) {
-        line = lines[m];
+      for (o = 0, len4 = lines.length; o < len4; o++) {
+        line = lines[o];
         ctx.lineTo(line.x, line.y);
       }
       ctx.lineWidth = 5;
