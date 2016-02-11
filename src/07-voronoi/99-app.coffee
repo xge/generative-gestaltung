@@ -1,14 +1,14 @@
-bbox = canvas = ctx = id = diagram = undefined
-drawPoints = false
+bbox = canvas = ctx = id = diagram = currentRenderer = undefined
+drawPoints = true
 drawLine = false
 points = []
 lines = []
-voronoi = new Voronoi()
 margin = t = N_POINTS = 0
-str = 'rgba(255, 255, 255, 0.1)'
+str = 'rgba(255, 255, 255, 0.2)'
 fil = 'rgba(20, 20, 20, 1.0)'
 mou = 'rgba(20, 40, 100, 0.3)'
 lin = 'rgba(20, 40, 100, 0.5)'
+pnt = 'rgba(255, 255, 255, 0.5)'
 
 init = ->
   # init canvas
@@ -16,17 +16,12 @@ init = ->
   canvas.height = window.innerHeight
   canvas.width = window.innerWidth
   canvas.onclick = addPoint
+  document.onkeypress = handleKeyPress
   # init context
   ctx = canvas.getContext('2d')
   ctx.fillStyle = fil
   ctx.fillRect 0, 0, canvas.width, canvas.height
-  ctx.lineWidth = 1
-  # init bounding box
-  bbox =
-    xl: 0
-    xr: canvas.width
-    yt: 0
-    yb: canvas.height
+  currentRenderer = new PointsOnlyRenderer(ctx, canvas.width, canvas.height)
   # kick off the computing and rendering
   N_POINTS = Math.ceil(canvas.width / 40)
   generatePoints N_POINTS
@@ -38,30 +33,18 @@ generatePoints = (n) ->
     points.push generatePoint(fil)
     i++
 
-generateCorners = ->
-  points.push
-    x: 0
-    y: 0
-    c: fil
-  points.push
-    x: canvas.width
-    y: 0
-    c: fil
-  points.push
-    x: canvas.width
-    y: canvas.height
-    c: fil
-  points.push
-    x: 0
-    y: canvas.height
-    c: fil
-
 generatePoint = (color) ->
   {
     x: Math.random() * canvas.width
     y: Math.random() * canvas.height
     c: color
   }
+
+handleKeyPress = (e) ->
+  switch e.code
+    when "KeyV" then currentRenderer = new VoronoiRenderer(ctx, canvas.width, canvas.height)
+    when "KeyL" then currentRenderer = new LineRenderer(ctx, canvas.width, canvas.height)
+    when "KeyN", "KeyP" then currentRenderer = new PointsOnlyRenderer(ctx, canvas.width, canvas.height)
 
 addPoint = (e) ->
     if event.pageX == null and event.clientX != null
@@ -82,35 +65,18 @@ addPoint = (e) ->
 
 render = () ->
     ctx.clearRect(0, 0, canvas.width, canvas.height);
-
-    for point, i in points
-        point.x += Math.sin(t / 100 + i) / 10
-        point.y += Math.sin(t / 100 + i) / 10
-    voronoi.recycle diagram
-    diagram = voronoi.compute(points, bbox)
-
     ctx.save()
-    for cell in diagram.cells
-        halfEdges = cell.halfedges
-        if halfEdges.length > 2
-            v = halfEdges[0].getStartpoint()
-            ctx.beginPath()
-            ctx.moveTo(v.x, v.y)
 
-            for halfEdge in halfEdges
-                v = halfEdge.getEndpoint()
-                ctx.lineTo(v.x, v.y)
-                ctx.fillStyle = cell.site.c
-                ctx.fill()
-                ctx.lineWidth = 1
-                ctx.strokeStyle = str
-                ctx.stroke()
+    currentRenderer.render(points)
 
     if drawPoints
-        for point in points
-            ctx.fillStyle = str
-            size = 4
-            ctx.fillRect point.x, point.y, size, size
+        for point, i in points
+            ctx.fillStyle = pnt
+            ctx.beginPath()
+            size = 4 + Math.sin(i + t * 0.01)
+            ctx.arc point.x, point.y, size, 0, Math.PI * 2
+            ctx.closePath()
+            ctx.fill()
 
     if drawLine and lines.length > 0
         ctx.beginPath()
