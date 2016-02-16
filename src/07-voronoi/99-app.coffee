@@ -1,8 +1,7 @@
-bbox = canvas = ctx = id = diagram = currentRenderer = undefined
+bbox = canvas = ctx = id = diagram = currentRenderer = currentMover = undefined
 drawPoints = true
 drawLine = false
 points = []
-lines = []
 margin = t = N_POINTS = 0
 str = 'rgba(255, 255, 255, 0.2)'
 fil = 'rgba(20, 20, 20, 1.0)'
@@ -22,6 +21,7 @@ init = ->
   ctx.fillStyle = fil
   ctx.fillRect 0, 0, canvas.width, canvas.height
   currentRenderer = new PointsOnlyRenderer(ctx, canvas.width, canvas.height)
+  currentMover = new CellMover()
   # kick off the computing and rendering
   N_POINTS = Math.ceil(canvas.width / 40)
   generatePoints N_POINTS
@@ -54,10 +54,6 @@ addPoint = (e) ->
         event.pageX = event.clientX + (doc and doc.scrollLeft or body and body.scrollLeft or 0) - (doc and doc.clientLeft or body and body.clientLeft or 0)
         event.pageY = event.clientY + (doc and doc.scrollTop or body and body.scrollTop or 0) - (doc and doc.clientTop or body and body.clientTop or 0)
 
-    lines.push
-       x: event.pageX
-       y: event.pageY
-
     points.push
         x: event.pageX
         y: event.pageY
@@ -67,25 +63,9 @@ render = () ->
     ctx.clearRect(0, 0, canvas.width, canvas.height);
     ctx.save()
 
+    currentMover.move(points)
     currentRenderer.render(points)
-
-    if drawPoints
-        for point, i in points
-            ctx.fillStyle = pnt
-            ctx.beginPath()
-            size = 4 + Math.sin(i + t * 0.01)
-            ctx.arc point.x, point.y, size, 0, Math.PI * 2
-            ctx.closePath()
-            ctx.fill()
-
-    if drawLine and lines.length > 0
-        ctx.beginPath()
-        ctx.moveTo lines[0].x, lines[0].y
-        for line in lines
-            ctx.lineTo line.x, line.y
-        ctx.lineWidth = 5
-        ctx.strokeStyle = lin
-        ctx.stroke()
+    currentRenderer.renderPoints(points)
 
     ctx.restore()
     t = requestAnimationFrame render

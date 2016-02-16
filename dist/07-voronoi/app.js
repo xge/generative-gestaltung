@@ -1,5 +1,5 @@
 (function() {
-  var LineRenderer, N_POINTS, PointsOnlyRenderer, VoronoiRenderer, addPoint, bbox, canvas, ctx, currentRenderer, diagram, drawLine, drawPoints, fil, generatePoint, generatePoints, handleKeyPress, id, init, lin, lines, margin, mou, pnt, points, render, str, t;
+  var CellMover, LineRenderer, N_POINTS, PointsOnlyRenderer, VoronoiRenderer, addPoint, bbox, canvas, ctx, currentMover, currentRenderer, diagram, drawLine, drawPoints, fil, generatePoint, generatePoints, handleKeyPress, id, init, lin, margin, mou, pnt, points, render, str, t;
 
   VoronoiRenderer = (function() {
     function VoronoiRenderer(ctx1, width, height) {
@@ -14,28 +14,23 @@
     }
 
     VoronoiRenderer.prototype.render = function(points) {
-      var cell, diagram, halfEdge, halfEdges, i, j, k, len, len1, point, ref, results, v;
-      for (i = j = 0, len = points.length; j < len; i = ++j) {
-        point = points[i];
-        point.x += Math.sin(t / 100 + i) / 10;
-        point.y += Math.sin(t / 100 + i) / 10;
-      }
+      var cell, diagram, halfEdge, halfEdges, j, len, ref, results, v;
       this.voronoi.recycle(diagram);
       diagram = this.voronoi.compute(points, this.bbox);
       ref = diagram.cells;
       results = [];
-      for (k = 0, len1 = ref.length; k < len1; k++) {
-        cell = ref[k];
+      for (j = 0, len = ref.length; j < len; j++) {
+        cell = ref[j];
         halfEdges = cell.halfedges;
         if (halfEdges.length > 2) {
           v = halfEdges[0].getStartpoint();
           this.ctx.beginPath();
           this.ctx.moveTo(v.x, v.y);
           results.push((function() {
-            var l, len2, results1;
+            var k, len1, results1;
             results1 = [];
-            for (l = 0, len2 = halfEdges.length; l < len2; l++) {
-              halfEdge = halfEdges[l];
+            for (k = 0, len1 = halfEdges.length; k < len1; k++) {
+              halfEdge = halfEdges[k];
               v = halfEdge.getEndpoint();
               this.ctx.lineTo(v.x, v.y);
               this.ctx.fillStyle = cell.site.c;
@@ -53,6 +48,21 @@
       return results;
     };
 
+    VoronoiRenderer.prototype.renderPoints = function(points) {
+      var i, j, len, point, results, size;
+      results = [];
+      for (i = j = 0, len = points.length; j < len; i = ++j) {
+        point = points[i];
+        this.ctx.fillStyle = pnt;
+        this.ctx.beginPath();
+        size = 4 + Math.sin(i + t * 0.01);
+        this.ctx.arc(point.x, point.y, size, 0, Math.PI * 2);
+        this.ctx.closePath();
+        results.push(this.ctx.fill());
+      }
+      return results;
+    };
+
     return VoronoiRenderer;
 
   })();
@@ -65,23 +75,33 @@
     }
 
     LineRenderer.prototype.render = function(points) {
-      var i, j, k, len, len1, point;
-      for (i = j = 0, len = points.length; j < len; i = ++j) {
-        point = points[i];
-        point.x += Math.sin(t / 100 + i) / 10;
-        point.y += Math.sin(t / 100 + i) / 10;
-      }
+      var j, len, point;
       this.ctx.fillStyle = fil;
       this.ctx.fillRect(0, 0, this.width, this.height);
       this.ctx.beginPath();
       this.ctx.moveTo(points[0].x, points[0].y);
-      for (k = 0, len1 = points.length; k < len1; k++) {
-        point = points[k];
+      for (j = 0, len = points.length; j < len; j++) {
+        point = points[j];
         this.ctx.lineTo(point.x, point.y);
       }
       this.ctx.closePath();
       this.ctx.strokeStyle = str;
       return this.ctx.stroke();
+    };
+
+    LineRenderer.prototype.renderPoints = function(points) {
+      var i, j, len, point, results, size;
+      results = [];
+      for (i = j = 0, len = points.length; j < len; i = ++j) {
+        point = points[i];
+        this.ctx.fillStyle = pnt;
+        this.ctx.beginPath();
+        size = 4 + Math.sin(i + t * 0.01);
+        this.ctx.arc(point.x, point.y, size, 0, Math.PI * 2);
+        this.ctx.closePath();
+        results.push(this.ctx.fill());
+      }
+      return results;
     };
 
     return LineRenderer;
@@ -106,19 +126,49 @@
       return this.ctx.fillRect(0, 0, this.width, this.height);
     };
 
+    PointsOnlyRenderer.prototype.renderPoints = function(points) {
+      var i, j, len, point, results, size;
+      results = [];
+      for (i = j = 0, len = points.length; j < len; i = ++j) {
+        point = points[i];
+        this.ctx.fillStyle = pnt;
+        this.ctx.beginPath();
+        size = 4 + Math.sin(i + t * 0.01);
+        this.ctx.arc(point.x, point.y, size, 0, Math.PI * 2);
+        this.ctx.closePath();
+        results.push(this.ctx.fill());
+      }
+      return results;
+    };
+
     return PointsOnlyRenderer;
 
   })();
 
-  bbox = canvas = ctx = id = diagram = currentRenderer = void 0;
+  CellMover = (function() {
+    function CellMover() {}
+
+    CellMover.prototype.move = function(points) {
+      var i, j, len, point;
+      for (i = j = 0, len = points.length; j < len; i = ++j) {
+        point = points[i];
+        point.x += Math.sin(t / 100 + i) / 10;
+        point.y += Math.sin(t / 100 + i) / 10;
+      }
+      return points;
+    };
+
+    return CellMover;
+
+  })();
+
+  bbox = canvas = ctx = id = diagram = currentRenderer = currentMover = void 0;
 
   drawPoints = true;
 
   drawLine = false;
 
   points = [];
-
-  lines = [];
 
   margin = t = N_POINTS = 0;
 
@@ -142,6 +192,7 @@
     ctx.fillStyle = fil;
     ctx.fillRect(0, 0, canvas.width, canvas.height);
     currentRenderer = new PointsOnlyRenderer(ctx, canvas.width, canvas.height);
+    currentMover = new CellMover();
     N_POINTS = Math.ceil(canvas.width / 40);
     generatePoints(N_POINTS);
     return render();
@@ -187,10 +238,6 @@
       event.pageX = event.clientX + (doc && doc.scrollLeft || body && body.scrollLeft || 0) - (doc && doc.clientLeft || body && body.clientLeft || 0);
       event.pageY = event.clientY + (doc && doc.scrollTop || body && body.scrollTop || 0) - (doc && doc.clientTop || body && body.clientTop || 0);
     }
-    lines.push({
-      x: event.pageX,
-      y: event.pageY
-    });
     return points.push({
       x: event.pageX,
       y: event.pageY,
@@ -199,32 +246,11 @@
   };
 
   render = function() {
-    var i, j, k, len, len1, line, point, size;
     ctx.clearRect(0, 0, canvas.width, canvas.height);
     ctx.save();
+    currentMover.move(points);
     currentRenderer.render(points);
-    if (drawPoints) {
-      for (i = j = 0, len = points.length; j < len; i = ++j) {
-        point = points[i];
-        ctx.fillStyle = pnt;
-        ctx.beginPath();
-        size = 4 + Math.sin(i + t * 0.01);
-        ctx.arc(point.x, point.y, size, 0, Math.PI * 2);
-        ctx.closePath();
-        ctx.fill();
-      }
-    }
-    if (drawLine && lines.length > 0) {
-      ctx.beginPath();
-      ctx.moveTo(lines[0].x, lines[0].y);
-      for (k = 0, len1 = lines.length; k < len1; k++) {
-        line = lines[k];
-        ctx.lineTo(line.x, line.y);
-      }
-      ctx.lineWidth = 5;
-      ctx.strokeStyle = lin;
-      ctx.stroke();
-    }
+    currentRenderer.renderPoints(points);
     ctx.restore();
     return t = requestAnimationFrame(render);
   };
