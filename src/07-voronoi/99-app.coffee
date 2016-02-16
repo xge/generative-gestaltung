@@ -10,41 +10,43 @@ lin = 'rgba(20, 40, 100, 0.5)'
 pnt = 'rgba(255, 255, 255, 0.5)'
 
 init = ->
-  # init canvas
-  canvas = document.getElementsByTagName('canvas')[0]
-  canvas.height = window.innerHeight
-  canvas.width = window.innerWidth
-  canvas.onclick = addPoint
-  document.onkeypress = handleKeyPress
-  # init context
-  ctx = canvas.getContext('2d')
-  ctx.fillStyle = fil
-  ctx.fillRect 0, 0, canvas.width, canvas.height
-  currentRenderer = new PointsOnlyRenderer(ctx, canvas.width, canvas.height)
-  currentMover = new CellMover()
-  # kick off the computing and rendering
-  N_POINTS = Math.ceil(canvas.width / 40)
-  generatePoints N_POINTS
-  render()
+# init canvas
+    canvas = document.getElementsByTagName('canvas')[0]
+    canvas.height = window.innerHeight
+    canvas.width = window.innerWidth
+    canvas.onclick = addPoint
+    document.onkeypress = handleKeyPress
+    # init context
+    ctx = canvas.getContext('2d')
+    ctx.fillStyle = fil
+    ctx.fillRect 0, 0, canvas.width, canvas.height
+    currentRenderer = new PointsOnlyRenderer(ctx, canvas.width, canvas.height)
+    currentMover = new CircleMover()
+    # kick off the computing and rendering
+    N_POINTS = Math.ceil(canvas.width / 40)
+    generatePoints N_POINTS
+    render()
 
 generatePoints = (n) ->
-  i = 0
-  while i < n
-    points.push generatePoint(fil)
-    i++
+    i = 0
+    while i < n
+        points.push generatePoint(fil)
+        i++
 
 generatePoint = (color) ->
-  {
-    x: Math.random() * canvas.width
-    y: Math.random() * canvas.height
-    c: color
-  }
+    {
+        x: Math.random() * canvas.width
+        y: Math.random() * canvas.height
+        c: color
+    }
 
 handleKeyPress = (e) ->
-  switch e.code
-    when "KeyV" then currentRenderer = new VoronoiRenderer(ctx, canvas.width, canvas.height)
-    when "KeyL" then currentRenderer = new LineRenderer(ctx, canvas.width, canvas.height)
-    when "KeyN", "KeyP" then currentRenderer = new PointsOnlyRenderer(ctx, canvas.width, canvas.height)
+    switch e.code
+        when "KeyQ" then currentMover = new CellMover()
+        when "KeyW" then currentMover = new CircleMover()
+        when "KeyA" then currentRenderer = new VoronoiRenderer(ctx, canvas.width, canvas.height)
+        when "KeyS" then currentRenderer = new LineRenderer(ctx, canvas.width, canvas.height)
+        when "KeyD" then currentRenderer = new PointsOnlyRenderer(ctx, canvas.width, canvas.height)
 
 addPoint = (e) ->
     if event.pageX == null and event.clientX != null

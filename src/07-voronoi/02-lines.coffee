@@ -15,7 +15,7 @@ class LineRenderer
         for point, i in points
             @ctx.fillStyle = pnt
             @ctx.beginPath()
-            size = 4 + Math.sin(i + t * 0.01)
+            size = 4 + Math.sin(i + t * 0.1)
             @ctx.arc point.x, point.y, size, 0, Math.PI * 2
             @ctx.closePath()
             @ctx.fill()

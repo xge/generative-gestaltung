@@ -1,5 +1,5 @@
 (function() {
-  var CellMover, LineRenderer, N_POINTS, PointsOnlyRenderer, VoronoiRenderer, addPoint, bbox, canvas, ctx, currentMover, currentRenderer, diagram, drawLine, drawPoints, fil, generatePoint, generatePoints, handleKeyPress, id, init, lin, margin, mou, pnt, points, render, str, t;
+  var CellMover, CircleMover, LineRenderer, N_POINTS, PointsOnlyRenderer, VoronoiRenderer, addPoint, bbox, canvas, ctx, currentMover, currentRenderer, diagram, drawLine, drawPoints, fil, generatePoint, generatePoints, handleKeyPress, id, init, lin, margin, mou, pnt, points, render, str, t;
 
   VoronoiRenderer = (function() {
     function VoronoiRenderer(ctx1, width, height) {
@@ -55,7 +55,7 @@
         point = points[i];
         this.ctx.fillStyle = pnt;
         this.ctx.beginPath();
-        size = 4 + Math.sin(i + t * 0.01);
+        size = 4 + Math.sin(i + t * 0.1);
         this.ctx.arc(point.x, point.y, size, 0, Math.PI * 2);
         this.ctx.closePath();
         results.push(this.ctx.fill());
@@ -96,7 +96,7 @@
         point = points[i];
         this.ctx.fillStyle = pnt;
         this.ctx.beginPath();
-        size = 4 + Math.sin(i + t * 0.01);
+        size = 4 + Math.sin(i + t * 0.1);
         this.ctx.arc(point.x, point.y, size, 0, Math.PI * 2);
         this.ctx.closePath();
         results.push(this.ctx.fill());
@@ -133,7 +133,7 @@
         point = points[i];
         this.ctx.fillStyle = pnt;
         this.ctx.beginPath();
-        size = 4 + Math.sin(i + t * 0.01);
+        size = 4 + Math.sin(i + t * 0.1);
         this.ctx.arc(point.x, point.y, size, 0, Math.PI * 2);
         this.ctx.closePath();
         results.push(this.ctx.fill());
@@ -142,6 +142,28 @@
     };
 
     return PointsOnlyRenderer;
+
+  })();
+
+  CircleMover = (function() {
+    function CircleMover() {
+      this.centerX = window.innerWidth / 2;
+      this.centerY = window.innerHeight / 2;
+      this.r = 200;
+    }
+
+    CircleMover.prototype.move = function(points) {
+      var i, j, len, point, results;
+      results = [];
+      for (i = j = 0, len = points.length; j < len; i = ++j) {
+        point = points[i];
+        point.x = this.centerX + this.r * Math.cos(2 * (i + 1) * Math.PI / points.length);
+        results.push(point.y = this.centerY + this.r * Math.sin(2 * (i + 1) * Math.PI / points.length));
+      }
+      return results;
+    };
+
+    return CircleMover;
 
   })();
 
@@ -192,7 +214,7 @@
     ctx.fillStyle = fil;
     ctx.fillRect(0, 0, canvas.width, canvas.height);
     currentRenderer = new PointsOnlyRenderer(ctx, canvas.width, canvas.height);
-    currentMover = new CellMover();
+    currentMover = new CircleMover();
     N_POINTS = Math.ceil(canvas.width / 40);
     generatePoints(N_POINTS);
     return render();
@@ -219,12 +241,15 @@
 
   handleKeyPress = function(e) {
     switch (e.code) {
-      case "KeyV":
+      case "KeyQ":
+        return currentMover = new CellMover();
+      case "KeyW":
+        return currentMover = new CircleMover();
+      case "KeyA":
         return currentRenderer = new VoronoiRenderer(ctx, canvas.width, canvas.height);
-      case "KeyL":
+      case "KeyS":
         return currentRenderer = new LineRenderer(ctx, canvas.width, canvas.height);
-      case "KeyN":
-      case "KeyP":
+      case "KeyD":
         return currentRenderer = new PointsOnlyRenderer(ctx, canvas.width, canvas.height);
     }
   };
