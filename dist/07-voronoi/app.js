@@ -1,5 +1,5 @@
 (function() {
-  var COLORS, CellMover, CircleMover, LineRenderer, MoveToCellMover, N_POINTS, PointsOnlyRenderer, VoronoiRenderer, addPoint, bbox, canvas, ctx, currentMover, currentRenderer, diagram, drawLine, drawPoints, generatePoint, generatePoints, handleKeyPress, id, init, margin, points, render, t;
+  var COLORS, CellMover, CircleMover, LineRenderer, MoveToCircleMover, N_POINTS, PointsOnlyRenderer, VoronoiRenderer, addPoint, bbox, canvas, ctx, currentMover, currentRenderer, diagram, drawLine, drawPoints, generatePoint, generatePoints, handleKeyPress, id, init, margin, points, render, t;
 
   VoronoiRenderer = (function() {
     function VoronoiRenderer(ctx1, width, height) {
@@ -145,38 +145,36 @@
 
   })();
 
-  MoveToCellMover = (function() {
-    function MoveToCellMover() {
+  MoveToCircleMover = (function() {
+    function MoveToCircleMover() {
       this.centerX = window.innerWidth / 2;
       this.centerY = window.innerHeight / 2;
       this.r = window.innerHeight / 4;
     }
 
-    MoveToCellMover.prototype.blend = function(x, y, t) {
-      var max, min, range;
+    MoveToCircleMover.prototype.blend = function(x, y, t) {
+      var range;
       x = Math.ceil(x);
       y = Math.ceil(y);
       t = Math.ceil(t);
-      max = Math.max(x, y);
-      min = Math.min(x, y);
-      range = max - min;
-      return min + t * (range / 100);
+      range = Math.max(x, y) - Math.min(x, y);
+      return Math.min(x, y) + t * (range / 100);
     };
 
-    MoveToCellMover.prototype.move = function(points, t) {
+    MoveToCircleMover.prototype.move = function(points, t) {
       var i, j, len, newX, newY, point, results;
       results = [];
       for (i = j = 0, len = points.length; j < len; i = ++j) {
         point = points[i];
         newX = this.centerX + this.r * Math.cos(2 * (i + 1) * Math.PI / points.length);
-        point.x = this.blend(point.x, newX, t % 50);
+        point.x = this.blend(point.x, newX, t % 10);
         newY = this.centerY + this.r * Math.sin(2 * (i + 1) * Math.PI / points.length);
-        results.push(point.y = this.blend(point.y, newY, t % 50));
+        results.push(point.y = this.blend(point.y, newY, t % 10));
       }
       return results;
     };
 
-    return MoveToCellMover;
+    return MoveToCircleMover;
 
   })();
 
@@ -241,13 +239,14 @@
     canvas = document.getElementsByTagName('canvas')[0];
     canvas.height = window.innerHeight;
     canvas.width = window.innerWidth;
+    canvas.onclick = addPoint;
     document.onkeypress = handleKeyPress;
     ctx = canvas.getContext('2d');
     ctx.fillStyle = COLORS.FILL;
     ctx.fillRect(0, 0, canvas.width, canvas.height);
     currentRenderer = new VoronoiRenderer(ctx, canvas.width, canvas.height);
     currentMover = new CircleMover();
-    N_POINTS = 25;
+    N_POINTS = 50;
     points.push(generatePoint(COLORS.FILL));
     points.push(generatePoint(COLORS.FILL));
     return render();
@@ -279,7 +278,7 @@
       case "KeyW":
         return currentMover = new CircleMover();
       case "KeyE":
-        return currentMover = new MoveToCellMover();
+        return currentMover = new MoveToCircleMover();
       case "KeyA":
         return currentRenderer = new VoronoiRenderer(ctx, canvas.width, canvas.height);
       case "KeyS":
@@ -289,7 +288,7 @@
     }
   };
 
-  addPoint = function(e) {
+  addPoint = function(event) {
     var body, doc, eventDoc;
     if (event.pageX === null && event.clientX !== null) {
       eventDoc = event.target && event.target.ownerDocument || document;
@@ -306,22 +305,38 @@
   };
 
   render = function() {
-    var INTRO_TIME;
-    INTRO_TIME = 50 * N_POINTS;
+    var INTERVAL, INTRO_TIME;
+    INTERVAL = 25;
+    INTRO_TIME = 25 * N_POINTS;
     if (t === 1) {
+      console.debug(Date.now());
       currentMover = new CellMover();
     }
-    if (t > INTRO_TIME && t < 2 * INTRO_TIME + 100) {
-      if (t % 50 === 0 && points.length < N_POINTS) {
+    if (t > INTRO_TIME && t < 2 * INTRO_TIME) {
+      if (t % INTERVAL === 0 && points.length < N_POINTS) {
         points.push(generatePoint(COLORS.FILL));
       }
     }
-    if (t === 2 * INTRO_TIME + 100) {
-      currentRenderer = new PointsOnlyRenderer(ctx, canvas.width, canvas.height);
-      currentMover = new MoveToCellMover();
+    if (t === 2 * INTRO_TIME) {
+      console.debug(Date.now());
+      currentMover = new MoveToCircleMover();
     }
-    if (t === 2 * INTRO_TIME + 200) {
+    if (t === 2 * INTRO_TIME + 100) {
+      console.debug(Date.now());
       currentMover = new CircleMover();
+    }
+    if (t === 3 * INTRO_TIME) {
+      console.debug(Date.now());
+      currentMover = new CellMover();
+    }
+    if (t === 4 * INTRO_TIME) {
+      console.debug(Date.now());
+      currentMover = new CircleMover();
+    }
+    if (t === 5 * INTRO_TIME) {
+      console.debug(Date.now());
+      currentRenderer = new PointsOnlyRenderer(ctx, canvas.width, canvas.height);
+      currentMover = new CellMover();
     }
     currentMover.move(points, t);
     currentRenderer.render(points);

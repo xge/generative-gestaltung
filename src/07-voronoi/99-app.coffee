@@ -15,7 +15,7 @@ init = ->
     canvas = document.getElementsByTagName('canvas')[0]
     canvas.height = window.innerHeight
     canvas.width = window.innerWidth
-    # canvas.onclick = addPoint
+    canvas.onclick = addPoint
     document.onkeypress = handleKeyPress
     # init context
     ctx = canvas.getContext('2d')
@@ -24,7 +24,7 @@ init = ->
     currentRenderer = new VoronoiRenderer(ctx, canvas.width, canvas.height)
     currentMover = new CircleMover()
     # kick off the computing and rendering
-    N_POINTS = 25
+    N_POINTS = 50
     points.push generatePoint COLORS.FILL
     points.push generatePoint COLORS.FILL
     # generatePoints N_POINTS
@@ -47,12 +47,12 @@ handleKeyPress = (e) ->
     switch e.code
         when "KeyQ" then currentMover = new CellMover()
         when "KeyW" then currentMover = new CircleMover()
-        when "KeyE" then currentMover = new MoveToCellMover()
+        when "KeyE" then currentMover = new MoveToCircleMover()
         when "KeyA" then currentRenderer = new VoronoiRenderer(ctx, canvas.width, canvas.height)
         when "KeyS" then currentRenderer = new LineRenderer(ctx, canvas.width, canvas.height)
         when "KeyD" then currentRenderer = new PointsOnlyRenderer(ctx, canvas.width, canvas.height)
 
-addPoint = (e) ->
+addPoint = (event) ->
     if event.pageX == null and event.clientX != null
         eventDoc = event.target and event.target.ownerDocument or document
         doc = eventDoc.documentElement
@@ -66,19 +66,36 @@ addPoint = (e) ->
         c: COLORS.MOUSE
 
 render = () ->
-    INTRO_TIME = 50 * N_POINTS
+    INTERVAL = 25
+    INTRO_TIME = 25 * N_POINTS
 
     if t is 1
+        console.debug Date.now()
         currentMover = new CellMover()
-    if t > INTRO_TIME and t < 2 * INTRO_TIME + 100
-        if t % 50 is 0 and points.length < N_POINTS
+    if t > INTRO_TIME and t < 2 * INTRO_TIME
+        if t % INTERVAL is 0 and points.length < N_POINTS
             points.push generatePoint(COLORS.FILL)
+    if t is 2 * INTRO_TIME
+        console.debug Date.now()
+        currentMover = new MoveToCircleMover()
     if t is 2 * INTRO_TIME + 100
-        currentRenderer = new PointsOnlyRenderer(ctx, canvas.width, canvas.height)
-        currentMover = new MoveToCellMover()
-    if t is 2 * INTRO_TIME + 200
+        console.debug Date.now()
         currentMover = new CircleMover()
-
+    if t is 3 * INTRO_TIME
+        console.debug Date.now()
+        currentMover = new CellMover()
+    if t is 4 * INTRO_TIME
+        console.debug Date.now()
+        currentMover = new CircleMover()
+    if t is 5 * INTRO_TIME
+        console.debug Date.now()
+        currentRenderer = new PointsOnlyRenderer(ctx, canvas.width, canvas.height)
+        currentMover = new CellMover()
+    # blend to random position
+    # slowly pop until points.length is 2
+    # blend to circle Position
+    # activate line renderer
+    # slowly push until points.length is N_POINTS
 
     currentMover.move(points, t)
     currentRenderer.render(points)
