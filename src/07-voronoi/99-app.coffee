@@ -3,22 +3,23 @@ drawPoints = true
 drawLine = false
 points = []
 margin = t = N_POINTS = 0
-str = 'rgba(255, 255, 255, 0.2)'
-fil = 'rgba(20, 20, 20, 1.0)'
-mou = 'rgba(20, 40, 100, 0.3)'
-lin = 'rgba(20, 40, 100, 0.5)'
-pnt = 'rgba(255, 255, 255, 0.5)'
+COLORS =
+    STROKE: 'rgba(255, 255, 255, 0.2)'
+    FILL: 'rgba(20, 20, 20, 1.0)'
+    MOUSE: 'rgba(20, 40, 100, 0.3)'
+    LINE: 'rgba(20, 40, 100, 0.5)'
+    POINT: 'rgba(255, 255, 255, 0.5)'
 
 init = ->
 # init canvas
     canvas = document.getElementsByTagName('canvas')[0]
     canvas.height = window.innerHeight
     canvas.width = window.innerWidth
-    canvas.onclick = addPoint
+    # canvas.onclick = addPoint
     document.onkeypress = handleKeyPress
     # init context
     ctx = canvas.getContext('2d')
-    ctx.fillStyle = fil
+    ctx.fillStyle = COLORS.FILL
     ctx.fillRect 0, 0, canvas.width, canvas.height
     currentRenderer = new PointsOnlyRenderer(ctx, canvas.width, canvas.height)
     currentMover = new CircleMover()
@@ -30,7 +31,7 @@ init = ->
 generatePoints = (n) ->
     i = 0
     while i < n
-        points.push generatePoint(fil)
+        points.push generatePoint(COLORS.FILL)
         i++
 
 generatePoint = (color) ->
@@ -59,7 +60,7 @@ addPoint = (e) ->
     points.push
         x: event.pageX
         y: event.pageY
-        c: mou
+        c: COLORS.MOUSE
 
 render = () ->
     ctx.clearRect(0, 0, canvas.width, canvas.height);

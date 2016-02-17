@@ -1,5 +1,5 @@
 (function() {
-  var CellMover, CircleMover, LineRenderer, N_POINTS, PointsOnlyRenderer, VoronoiRenderer, addPoint, bbox, canvas, ctx, currentMover, currentRenderer, diagram, drawLine, drawPoints, fil, generatePoint, generatePoints, handleKeyPress, id, init, lin, margin, mou, pnt, points, render, str, t;
+  var COLORS, CellMover, CircleMover, LineRenderer, N_POINTS, PointsOnlyRenderer, VoronoiRenderer, addPoint, bbox, canvas, ctx, currentMover, currentRenderer, diagram, drawLine, drawPoints, generatePoint, generatePoints, handleKeyPress, id, init, margin, points, render, t;
 
   VoronoiRenderer = (function() {
     function VoronoiRenderer(ctx1, width, height) {
@@ -36,7 +36,7 @@
               this.ctx.fillStyle = cell.site.c;
               this.ctx.fill();
               this.ctx.lineWidth = 1;
-              this.ctx.strokeStyle = str;
+              this.ctx.strokeStyle = COLORS.STROKE;
               results1.push(this.ctx.stroke());
             }
             return results1;
@@ -53,7 +53,7 @@
       results = [];
       for (i = j = 0, len = points.length; j < len; i = ++j) {
         point = points[i];
-        this.ctx.fillStyle = pnt;
+        this.ctx.fillStyle = COLORS.POINT;
         this.ctx.beginPath();
         size = 4 + Math.sin(i + t * 0.1);
         this.ctx.arc(point.x, point.y, size, 0, Math.PI * 2);
@@ -76,7 +76,7 @@
 
     LineRenderer.prototype.render = function(points) {
       var j, len, point;
-      this.ctx.fillStyle = fil;
+      this.ctx.fillStyle = COLORS.FILL;
       this.ctx.fillRect(0, 0, this.width, this.height);
       this.ctx.beginPath();
       this.ctx.moveTo(points[0].x, points[0].y);
@@ -85,7 +85,7 @@
         this.ctx.lineTo(point.x, point.y);
       }
       this.ctx.closePath();
-      this.ctx.strokeStyle = str;
+      this.ctx.strokeStyle = COLORS.STROKE;
       return this.ctx.stroke();
     };
 
@@ -94,7 +94,7 @@
       results = [];
       for (i = j = 0, len = points.length; j < len; i = ++j) {
         point = points[i];
-        this.ctx.fillStyle = pnt;
+        this.ctx.fillStyle = COLORS.POINT;
         this.ctx.beginPath();
         size = 4 + Math.sin(i + t * 0.1);
         this.ctx.arc(point.x, point.y, size, 0, Math.PI * 2);
@@ -122,7 +122,7 @@
         point.x += Math.sin(t / 100 + i) / 10;
         point.y += Math.sin(t / 100 + i) / 10;
       }
-      this.ctx.fillStyle = fil;
+      this.ctx.fillStyle = COLORS.FILL;
       return this.ctx.fillRect(0, 0, this.width, this.height);
     };
 
@@ -131,7 +131,7 @@
       results = [];
       for (i = j = 0, len = points.length; j < len; i = ++j) {
         point = points[i];
-        this.ctx.fillStyle = pnt;
+        this.ctx.fillStyle = COLORS.POINT;
         this.ctx.beginPath();
         size = 4 + Math.sin(i + t * 0.1);
         this.ctx.arc(point.x, point.y, size, 0, Math.PI * 2);
@@ -194,24 +194,21 @@
 
   margin = t = N_POINTS = 0;
 
-  str = 'rgba(255, 255, 255, 0.2)';
-
-  fil = 'rgba(20, 20, 20, 1.0)';
-
-  mou = 'rgba(20, 40, 100, 0.3)';
-
-  lin = 'rgba(20, 40, 100, 0.5)';
-
-  pnt = 'rgba(255, 255, 255, 0.5)';
+  COLORS = {
+    STROKE: 'rgba(255, 255, 255, 0.2)',
+    FILL: 'rgba(20, 20, 20, 1.0)',
+    MOUSE: 'rgba(20, 40, 100, 0.3)',
+    LINE: 'rgba(20, 40, 100, 0.5)',
+    POINT: 'rgba(255, 255, 255, 0.5)'
+  };
 
   init = function() {
     canvas = document.getElementsByTagName('canvas')[0];
     canvas.height = window.innerHeight;
     canvas.width = window.innerWidth;
-    canvas.onclick = addPoint;
     document.onkeypress = handleKeyPress;
     ctx = canvas.getContext('2d');
-    ctx.fillStyle = fil;
+    ctx.fillStyle = COLORS.FILL;
     ctx.fillRect(0, 0, canvas.width, canvas.height);
     currentRenderer = new PointsOnlyRenderer(ctx, canvas.width, canvas.height);
     currentMover = new CircleMover();
@@ -225,7 +222,7 @@
     i = 0;
     results = [];
     while (i < n) {
-      points.push(generatePoint(fil));
+      points.push(generatePoint(COLORS.FILL));
       results.push(i++);
     }
     return results;
@@ -266,7 +263,7 @@
     return points.push({
       x: event.pageX,
       y: event.pageY,
-      c: mou
+      c: COLORS.MOUSE
     });
   };
 
