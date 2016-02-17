@@ -1,5 +1,5 @@
 (function() {
-  var COLORS, CellMover, CircleMover, LineRenderer, N_POINTS, PointsOnlyRenderer, VoronoiRenderer, addPoint, bbox, canvas, ctx, currentMover, currentRenderer, diagram, drawLine, drawPoints, generatePoint, generatePoints, handleKeyPress, id, init, margin, points, render, t;
+  var COLORS, CellMover, CircleMover, LineRenderer, MoveToCellMover, N_POINTS, PointsOnlyRenderer, VoronoiRenderer, addPoint, bbox, canvas, ctx, currentMover, currentRenderer, diagram, drawLine, drawPoints, generatePoint, generatePoints, handleKeyPress, id, init, margin, points, render, t;
 
   VoronoiRenderer = (function() {
     function VoronoiRenderer(ctx1, width, height) {
@@ -145,6 +145,41 @@
 
   })();
 
+  MoveToCellMover = (function() {
+    function MoveToCellMover() {
+      this.centerX = window.innerWidth / 2;
+      this.centerY = window.innerHeight / 2;
+      this.r = window.innerHeight / 4;
+    }
+
+    MoveToCellMover.prototype.blend = function(x, y, t) {
+      var max, min, range;
+      x = Math.ceil(x);
+      y = Math.ceil(y);
+      t = Math.ceil(t);
+      max = Math.max(x, y);
+      min = Math.min(x, y);
+      range = max - min;
+      return min + t * (range / 100);
+    };
+
+    MoveToCellMover.prototype.move = function(points, t) {
+      var i, j, len, newX, newY, point, results;
+      results = [];
+      for (i = j = 0, len = points.length; j < len; i = ++j) {
+        point = points[i];
+        newX = this.centerX + this.r * Math.cos(2 * (i + 1) * Math.PI / points.length);
+        point.x = this.blend(point.x, newX, t % 50);
+        newY = this.centerY + this.r * Math.sin(2 * (i + 1) * Math.PI / points.length);
+        results.push(point.y = this.blend(point.y, newY, t % 50));
+      }
+      return results;
+    };
+
+    return MoveToCellMover;
+
+  })();
+
   CircleMover = (function() {
     function CircleMover() {
       this.centerX = window.innerWidth / 2;
@@ -210,9 +245,11 @@
     ctx = canvas.getContext('2d');
     ctx.fillStyle = COLORS.FILL;
     ctx.fillRect(0, 0, canvas.width, canvas.height);
-    currentRenderer = new LineRenderer(ctx, canvas.width, canvas.height);
+    currentRenderer = new VoronoiRenderer(ctx, canvas.width, canvas.height);
     currentMover = new CircleMover();
     N_POINTS = 25;
+    points.push(generatePoint(COLORS.FILL));
+    points.push(generatePoint(COLORS.FILL));
     return render();
   };
 
@@ -241,6 +278,8 @@
         return currentMover = new CellMover();
       case "KeyW":
         return currentMover = new CircleMover();
+      case "KeyE":
+        return currentMover = new MoveToCellMover();
       case "KeyA":
         return currentRenderer = new VoronoiRenderer(ctx, canvas.width, canvas.height);
       case "KeyS":
@@ -269,39 +308,22 @@
   render = function() {
     var INTRO_TIME;
     INTRO_TIME = 50 * N_POINTS;
-    if (t < INTRO_TIME) {
+    if (t === 1) {
+      currentMover = new CellMover();
+    }
+    if (t > INTRO_TIME && t < 2 * INTRO_TIME + 100) {
       if (t % 50 === 0 && points.length < N_POINTS) {
         points.push(generatePoint(COLORS.FILL));
       }
     }
-    if (t === INTRO_TIME + 100) {
-      currentRenderer = new PointsOnlyRenderer(ctx, canvas.width, canvas.height);
-      currentMover = new CellMover();
-    }
     if (t === 2 * INTRO_TIME + 100) {
-      currentMover = new CircleMover();
+      currentRenderer = new PointsOnlyRenderer(ctx, canvas.width, canvas.height);
+      currentMover = new MoveToCellMover();
     }
     if (t === 2 * INTRO_TIME + 200) {
-      currentRenderer = new VoronoiRenderer(ctx, canvas.width, canvas.height);
-    }
-    if (t === 3 * INTRO_TIME + 100) {
-      currentMover = new CellMover();
-    }
-    if (t === 4 * INTRO_TIME + 100) {
       currentMover = new CircleMover();
     }
-    if (t === 4 * INTRO_TIME + 500) {
-      currentRenderer = new LineRenderer(ctx, canvas.width, canvas.height);
-    }
-    if (t > 5 * INTRO_TIME + 100) {
-      if (t % 50 === 0 && points.length > 2) {
-        points.pop();
-      }
-    }
-    if (t === 6 * INTRO_TIME + 100) {
-      currentMover = new CellMover();
-    }
-    currentMover.move(points);
+    currentMover.move(points, t);
     currentRenderer.render(points);
     currentRenderer.renderPoints(points);
     return t = requestAnimationFrame(render);

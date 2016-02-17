@@ -21,10 +21,12 @@ init = ->
     ctx = canvas.getContext('2d')
     ctx.fillStyle = COLORS.FILL
     ctx.fillRect 0, 0, canvas.width, canvas.height
-    currentRenderer = new LineRenderer(ctx, canvas.width, canvas.height)
+    currentRenderer = new VoronoiRenderer(ctx, canvas.width, canvas.height)
     currentMover = new CircleMover()
     # kick off the computing and rendering
     N_POINTS = 25
+    points.push generatePoint COLORS.FILL
+    points.push generatePoint COLORS.FILL
     # generatePoints N_POINTS
     render()
 
@@ -45,6 +47,7 @@ handleKeyPress = (e) ->
     switch e.code
         when "KeyQ" then currentMover = new CellMover()
         when "KeyW" then currentMover = new CircleMover()
+        when "KeyE" then currentMover = new MoveToCellMover()
         when "KeyA" then currentRenderer = new VoronoiRenderer(ctx, canvas.width, canvas.height)
         when "KeyS" then currentRenderer = new LineRenderer(ctx, canvas.width, canvas.height)
         when "KeyD" then currentRenderer = new PointsOnlyRenderer(ctx, canvas.width, canvas.height)
@@ -65,31 +68,19 @@ addPoint = (e) ->
 render = () ->
     INTRO_TIME = 50 * N_POINTS
 
-    if t < INTRO_TIME
+    if t is 1
+        currentMover = new CellMover()
+    if t > INTRO_TIME and t < 2 * INTRO_TIME + 100
         if t % 50 is 0 and points.length < N_POINTS
             points.push generatePoint(COLORS.FILL)
-    if t is INTRO_TIME + 100
-        currentRenderer = new PointsOnlyRenderer(ctx, canvas.width, canvas.height)
-        currentMover = new CellMover()
     if t is 2 * INTRO_TIME + 100
-        currentMover = new CircleMover()
+        currentRenderer = new PointsOnlyRenderer(ctx, canvas.width, canvas.height)
+        currentMover = new MoveToCellMover()
     if t is 2 * INTRO_TIME + 200
-        currentRenderer = new VoronoiRenderer(ctx, canvas.width, canvas.height)
-    if t is 3 * INTRO_TIME + 100
-        currentMover = new CellMover()
-    if t is 4 * INTRO_TIME + 100
         currentMover = new CircleMover()
-    if t is 4 * INTRO_TIME + 500
-        currentRenderer = new LineRenderer(ctx, canvas.width, canvas.height)
-    if t > 5 * INTRO_TIME + 100
-        if t % 50 is 0 and points.length > 2
-            points.pop()
-    if t is 6 * INTRO_TIME + 100
-        currentMover = new CellMover()
 
 
-
-    currentMover.move(points)
+    currentMover.move(points, t)
     currentRenderer.render(points)
     currentRenderer.renderPoints(points)
 
