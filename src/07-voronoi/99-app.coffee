@@ -21,11 +21,11 @@ init = ->
     ctx = canvas.getContext('2d')
     ctx.fillStyle = COLORS.FILL
     ctx.fillRect 0, 0, canvas.width, canvas.height
-    currentRenderer = new PointsOnlyRenderer(ctx, canvas.width, canvas.height)
+    currentRenderer = new LineRenderer(ctx, canvas.width, canvas.height)
     currentMover = new CircleMover()
     # kick off the computing and rendering
-    N_POINTS = Math.ceil(canvas.width / 40)
-    generatePoints N_POINTS
+    N_POINTS = 25
+    # generatePoints N_POINTS
     render()
 
 generatePoints = (n) ->
@@ -63,14 +63,36 @@ addPoint = (e) ->
         c: COLORS.MOUSE
 
 render = () ->
-    ctx.clearRect(0, 0, canvas.width, canvas.height);
-    ctx.save()
+    INTRO_TIME = 50 * N_POINTS
+
+    if t < INTRO_TIME
+        if t % 50 is 0 and points.length < N_POINTS
+            points.push generatePoint(COLORS.FILL)
+    if t is INTRO_TIME + 100
+        currentRenderer = new PointsOnlyRenderer(ctx, canvas.width, canvas.height)
+        currentMover = new CellMover()
+    if t is 2 * INTRO_TIME + 100
+        currentMover = new CircleMover()
+    if t is 2 * INTRO_TIME + 200
+        currentRenderer = new VoronoiRenderer(ctx, canvas.width, canvas.height)
+    if t is 3 * INTRO_TIME + 100
+        currentMover = new CellMover()
+    if t is 4 * INTRO_TIME + 100
+        currentMover = new CircleMover()
+    if t is 4 * INTRO_TIME + 500
+        currentRenderer = new LineRenderer(ctx, canvas.width, canvas.height)
+    if t > 5 * INTRO_TIME + 100
+        if t % 50 is 0 and points.length > 2
+            points.pop()
+    if t is 6 * INTRO_TIME + 100
+        currentMover = new CellMover()
+
+
 
     currentMover.move(points)
     currentRenderer.render(points)
     currentRenderer.renderPoints(points)
 
-    ctx.restore()
     t = requestAnimationFrame render
 
 init()
