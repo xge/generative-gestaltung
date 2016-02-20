@@ -13,6 +13,9 @@
             margin: 0;
             padding: 0;
             overflow: hidden;
+            color: rgb(51, 51, 51);
+            font-size: 15px;
+            font-family: 'Interstate','Lucida Grande','Lucida Sans Unicode','Lucida Sans',Garuda,Verdana,Tahoma,sans-serif;
         }
 
         canvas {
@@ -20,9 +23,55 @@
             top: 0;
             left: 0
         }
+
+        .controls {
+            z-index: 666;
+            position: absolute;
+            bottom: 100px;
+            height: 24px;
+            line-height: 24px;
+            width: 100%;
+            background: #f5f5f5;
+            display: flex;
+            justify-content: space-around;
+        }
+
+        .control {
+            text-shadow: 0 1px 0 rgba(255,255,255,.9);
+        }
+
+        .key {
+            font-weight: bold;
+        }
     </style>
 </head>
 <body>
+<!--<iframe style="border: 0; width: 350px; height: 42px; position: absolute; bottom: 0; z-index: 666;" src="https://bandcamp.com/EmbeddedPlayer/album=3502179706/size=small/bgcol=ffffff/linkcol=0687f5/artwork=none/track=2195102740/transparent=true/autoplay=true" seamless><a href="http://lotusvibes.bandcamp.com/album/nomad-remastered">Nomad (Remastered) by Lotus</a></iframe>-->
+<div class="controls">
+    <div class="control">
+        <span class="key">Q</span>: Cell Mover
+    </div>
+    <div class="control">
+        <span class="key">W</span>: Circle Mover
+    </div>
+    <div class="control">
+        <span class="key">A</span>: Voronoi Renderer
+    </div>
+    <div class="control">
+        <span class="key">S</span>: Line Renderer
+    </div>
+    <div class="control">
+        <span class="key">D</span>: Points Only Renderer
+    </div>
+    <div class="control">
+        <span class="key">+</span>: Add Point
+    </div>
+    <div class="control">
+        <span class="key">-</span>: Subtract Point
+    </div>
+</div>
+<iframe width="100%" height="100" scrolling="no" frameborder="no" seamless style="position: absolute; bottom: 0; z-index: 666;"
+        src="https://w.soundcloud.com/player/?url=https%3A//api.soundcloud.com/tracks/126743782&amp;color=eeeeee&amp;auto_play=false&amp;hide_related=true&amp;show_comments=false&amp;show_user=false&amp;show_reposts=false"></iframe>
 <canvas></canvas>
 <script src="app.js"></script>
 </body>

@@ -3,6 +3,7 @@ drawPoints = true
 drawLine = false
 points = []
 margin = t = N_POINTS = 0
+
 COLORS =
     STROKE: 'rgba(255, 255, 255, 0.2)'
     FILL: 'rgba(20, 20, 20, 1.0)'
@@ -10,21 +11,31 @@ COLORS =
     LINE: 'rgba(20, 40, 100, 0.5)'
     POINT: 'rgba(255, 255, 255, 0.5)'
 
+CONST =
+    N_POINTS: 40
+    INTERVAL: 25
+    INTRO_TIME: 0
+
+DEBUG =
+    TIME: Date.now()
+
 init = ->
-# init canvas
+    # init canvas
     canvas = document.getElementsByTagName('canvas')[0]
-    canvas.height = window.innerHeight
+    canvas.height = window.innerHeight - 124 # magic number... height of help + player
     canvas.width = window.innerWidth
-    canvas.onclick = addPoint
+    # canvas.onclick = addPoint
     document.onkeypress = handleKeyPress
     # init context
     ctx = canvas.getContext('2d')
     ctx.fillStyle = COLORS.FILL
     ctx.fillRect 0, 0, canvas.width, canvas.height
+    # init renderer and mover
     currentRenderer = new VoronoiRenderer(ctx, canvas.width, canvas.height)
-    currentMover = new CircleMover()
+    currentMover = new CircleMover(canvas.width, canvas.height)
     # kick off the computing and rendering
-    N_POINTS = 50
+    CONST.INTRO_TIME = CONST.INTERVAL * CONST.N_POINTS
+    console.debug "debug::INTRO_TIME = #{CONST.INTRO_TIME}"
     points.push generatePoint COLORS.FILL
     points.push generatePoint COLORS.FILL
     # generatePoints N_POINTS
@@ -46,11 +57,13 @@ generatePoint = (color) ->
 handleKeyPress = (e) ->
     switch e.code
         when "KeyQ" then currentMover = new CellMover()
-        when "KeyW" then currentMover = new CircleMover()
-        when "KeyE" then currentMover = new MoveToCircleMover()
+        when "KeyW" then currentMover = new CircleMover(canvas.width, canvas.height)
+        when "KeyE" then currentMover = new MoveToCircleMover(canvas.width, canvas.height)
         when "KeyA" then currentRenderer = new VoronoiRenderer(ctx, canvas.width, canvas.height)
         when "KeyS" then currentRenderer = new LineRenderer(ctx, canvas.width, canvas.height)
         when "KeyD" then currentRenderer = new PointsOnlyRenderer(ctx, canvas.width, canvas.height)
+        when "BracketRight", "NumpadAdd" then points.push generatePoint(COLORS.FILL) if points.length < CONST.N_POINTS
+        when "Slash", "NumpadSubtract" then points.pop() if points.length > 2
 
 addPoint = (event) ->
     if event.pageX == null and event.clientX != null
@@ -65,30 +78,31 @@ addPoint = (event) ->
         y: event.pageY
         c: COLORS.MOUSE
 
-render = () ->
-    INTERVAL = 25
-    INTRO_TIME = 25 * N_POINTS
+takeTime = () ->
+    DEBUG.TIME = Date.now() - DEBUG.TIME
+    console.debug "debug::TIME = #{DEBUG.TIME / 1000}s"
 
+render = () ->
     if t is 1
-        console.debug Date.now()
+        takeTime()
         currentMover = new CellMover()
-    if t > INTRO_TIME and t < 2 * INTRO_TIME
-        if t % INTERVAL is 0 and points.length < N_POINTS
+    if t > CONST.INTRO_TIME and t < 2 * CONST.INTRO_TIME
+        if t % CONST.INTERVAL is 0 and points.length < CONST.N_POINTS
             points.push generatePoint(COLORS.FILL)
-    if t is 2 * INTRO_TIME
-        console.debug Date.now()
-        currentMover = new MoveToCircleMover()
-    if t is 2 * INTRO_TIME + 100
-        console.debug Date.now()
-        currentMover = new CircleMover()
-    if t is 3 * INTRO_TIME
-        console.debug Date.now()
+    if t is 2 * CONST.INTRO_TIME
+        takeTime()
+        currentMover = new MoveToCircleMover(canvas.width, canvas.height)
+    if t is 2 * CONST.INTRO_TIME + 100
+        takeTime()
+        currentMover = new CircleMover(canvas.width, canvas.height)
+    if t is 3 * CONST.INTRO_TIME
+        takeTime()
         currentMover = new CellMover()
-    if t is 4 * INTRO_TIME
-        console.debug Date.now()
-        currentMover = new CircleMover()
-    if t is 5 * INTRO_TIME
-        console.debug Date.now()
+    if t is 4 * CONST.INTRO_TIME
+        takeTime()
+        currentMover = new CircleMover(canvas.width, canvas.height)
+    if t is 5 * CONST.INTRO_TIME
+        takeTime()
         currentRenderer = new PointsOnlyRenderer(ctx, canvas.width, canvas.height)
         currentMover = new CellMover()
     # blend to random position

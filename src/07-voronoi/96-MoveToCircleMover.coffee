@@ -1,8 +1,8 @@
 class MoveToCircleMover
-    constructor: () ->
-        @centerX = window.innerWidth / 2
-        @centerY = window.innerHeight / 2
-        @r = window.innerHeight / 4
+    constructor: (width, height) ->
+        @centerX = width / 2
+        @centerY = height / 2
+        @r = height / 4
     blend: (x, y, t) ->
         x = Math.ceil x
         y = Math.ceil y

@@ -1,5 +1,5 @@
 (function() {
-  var COLORS, CellMover, CircleMover, LineRenderer, MoveToCircleMover, N_POINTS, PointsOnlyRenderer, VoronoiRenderer, addPoint, bbox, canvas, ctx, currentMover, currentRenderer, diagram, drawLine, drawPoints, generatePoint, generatePoints, handleKeyPress, id, init, margin, points, render, t;
+  var COLORS, CONST, CellMover, CircleMover, DEBUG, LineRenderer, MoveToCircleMover, N_POINTS, PointsOnlyRenderer, VoronoiRenderer, addPoint, bbox, canvas, ctx, currentMover, currentRenderer, diagram, drawLine, drawPoints, generatePoint, generatePoints, handleKeyPress, id, init, margin, points, render, t, takeTime;
 
   VoronoiRenderer = (function() {
     function VoronoiRenderer(ctx1, width, height) {
@@ -146,10 +146,10 @@
   })();
 
   MoveToCircleMover = (function() {
-    function MoveToCircleMover() {
-      this.centerX = window.innerWidth / 2;
-      this.centerY = window.innerHeight / 2;
-      this.r = window.innerHeight / 4;
+    function MoveToCircleMover(width, height) {
+      this.centerX = width / 2;
+      this.centerY = height / 2;
+      this.r = height / 4;
     }
 
     MoveToCircleMover.prototype.blend = function(x, y, t) {
@@ -179,10 +179,10 @@
   })();
 
   CircleMover = (function() {
-    function CircleMover() {
-      this.centerX = window.innerWidth / 2;
-      this.centerY = window.innerHeight / 2;
-      this.r = window.innerHeight / 4;
+    function CircleMover(width, height) {
+      this.centerX = width / 2;
+      this.centerY = height / 2;
+      this.r = height / 4;
     }
 
     CircleMover.prototype.move = function(points) {
@@ -235,18 +235,28 @@
     POINT: 'rgba(255, 255, 255, 0.5)'
   };
 
+  CONST = {
+    N_POINTS: 40,
+    INTERVAL: 25,
+    INTRO_TIME: 0
+  };
+
+  DEBUG = {
+    TIME: Date.now()
+  };
+
   init = function() {
     canvas = document.getElementsByTagName('canvas')[0];
-    canvas.height = window.innerHeight;
+    canvas.height = window.innerHeight - 124;
     canvas.width = window.innerWidth;
-    canvas.onclick = addPoint;
     document.onkeypress = handleKeyPress;
     ctx = canvas.getContext('2d');
     ctx.fillStyle = COLORS.FILL;
     ctx.fillRect(0, 0, canvas.width, canvas.height);
     currentRenderer = new VoronoiRenderer(ctx, canvas.width, canvas.height);
-    currentMover = new CircleMover();
-    N_POINTS = 50;
+    currentMover = new CircleMover(canvas.width, canvas.height);
+    CONST.INTRO_TIME = CONST.INTERVAL * CONST.N_POINTS;
+    console.debug("debug::INTRO_TIME = " + CONST.INTRO_TIME);
     points.push(generatePoint(COLORS.FILL));
     points.push(generatePoint(COLORS.FILL));
     return render();
@@ -276,15 +286,26 @@
       case "KeyQ":
         return currentMover = new CellMover();
       case "KeyW":
-        return currentMover = new CircleMover();
+        return currentMover = new CircleMover(canvas.width, canvas.height);
       case "KeyE":
-        return currentMover = new MoveToCircleMover();
+        return currentMover = new MoveToCircleMover(canvas.width, canvas.height);
       case "KeyA":
         return currentRenderer = new VoronoiRenderer(ctx, canvas.width, canvas.height);
       case "KeyS":
         return currentRenderer = new LineRenderer(ctx, canvas.width, canvas.height);
       case "KeyD":
         return currentRenderer = new PointsOnlyRenderer(ctx, canvas.width, canvas.height);
+      case "BracketRight":
+      case "NumpadAdd":
+        if (points.length < CONST.N_POINTS) {
+          return points.push(generatePoint(COLORS.FILL));
+        }
+        break;
+      case "Slash":
+      case "NumpadSubtract":
+        if (points.length > 2) {
+          return points.pop();
+        }
     }
   };
 
@@ -304,37 +325,39 @@
     });
   };
 
+  takeTime = function() {
+    DEBUG.TIME = Date.now() - DEBUG.TIME;
+    return console.debug("debug::TIME = " + (DEBUG.TIME / 1000) + "s");
+  };
+
   render = function() {
-    var INTERVAL, INTRO_TIME;
-    INTERVAL = 25;
-    INTRO_TIME = 25 * N_POINTS;
     if (t === 1) {
-      console.debug(Date.now());
+      takeTime();
       currentMover = new CellMover();
     }
-    if (t > INTRO_TIME && t < 2 * INTRO_TIME) {
-      if (t % INTERVAL === 0 && points.length < N_POINTS) {
+    if (t > CONST.INTRO_TIME && t < 2 * CONST.INTRO_TIME) {
+      if (t % CONST.INTERVAL === 0 && points.length < CONST.N_POINTS) {
         points.push(generatePoint(COLORS.FILL));
       }
     }
-    if (t === 2 * INTRO_TIME) {
-      console.debug(Date.now());
-      currentMover = new MoveToCircleMover();
+    if (t === 2 * CONST.INTRO_TIME) {
+      takeTime();
+      currentMover = new MoveToCircleMover(canvas.width, canvas.height);
     }
-    if (t === 2 * INTRO_TIME + 100) {
-      console.debug(Date.now());
-      currentMover = new CircleMover();
+    if (t === 2 * CONST.INTRO_TIME + 100) {
+      takeTime();
+      currentMover = new CircleMover(canvas.width, canvas.height);
     }
-    if (t === 3 * INTRO_TIME) {
-      console.debug(Date.now());
+    if (t === 3 * CONST.INTRO_TIME) {
+      takeTime();
       currentMover = new CellMover();
     }
-    if (t === 4 * INTRO_TIME) {
-      console.debug(Date.now());
-      currentMover = new CircleMover();
+    if (t === 4 * CONST.INTRO_TIME) {
+      takeTime();
+      currentMover = new CircleMover(canvas.width, canvas.height);
     }
-    if (t === 5 * INTRO_TIME) {
-      console.debug(Date.now());
+    if (t === 5 * CONST.INTRO_TIME) {
+      takeTime();
       currentRenderer = new PointsOnlyRenderer(ctx, canvas.width, canvas.height);
       currentMover = new CellMover();
     }
