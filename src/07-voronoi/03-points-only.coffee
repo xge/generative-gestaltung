@@ -9,9 +9,9 @@ class PointsOnlyRenderer
 
     renderPoints: (points) ->
         for point, i in points
-            @ctx.fillStyle = COLORS.POINT
+            @ctx.fillStyle = new Color(COLORS.POINT.r, COLORS.POINT.g, COLORS.POINT.b, 0.6 + Math.sin(i + t * 0.05) * 0.3)
             @ctx.beginPath()
-            size = 4 + Math.sin(i + t * 0.1)
+            size = 4 + Math.sin(i + t * 0.05)
             @ctx.arc point.x, point.y, size, 0, Math.PI * 2
             @ctx.closePath()
             @ctx.fill()

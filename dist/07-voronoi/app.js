@@ -1,5 +1,5 @@
 (function() {
-  var BlendMover, COLORS, CONST, CellMover, CircleMover, DEBUG, LineRenderer, N_POINTS, PointsOnlyRenderer, VoronoiRenderer, addPoint, bbox, canvas, ctx, currentMover, currentRenderer, diagram, drawLine, drawPoints, generateCircleBlendTargets, generatePoint, generatePoints, generateRandomBlendTargets, handleKeyPress, id, init, margin, points, render, renderDebug, showControls, t, takeTime;
+  var BlendMover, COLORS, CONST, CellMover, CircleMover, Color, DEBUG, LineRenderer, N_POINTS, PointsOnlyRenderer, VoronoiRenderer, addPoint, bbox, canvas, ctx, currentMover, currentRenderer, diagram, drawLine, drawPoints, generateCircleBlendTargets, generatePoint, generatePoints, generateRandomBlendTargets, handleKeyPress, id, init, margin, points, render, renderDebug, showControls, t, takeTime;
 
   VoronoiRenderer = (function() {
     function VoronoiRenderer(ctx1, width, height) {
@@ -36,7 +36,7 @@
               this.ctx.fillStyle = cell.site.c;
               this.ctx.fill();
               this.ctx.lineWidth = 1;
-              this.ctx.strokeStyle = COLORS.STROKE;
+              this.ctx.strokeStyle = COLORS.LINE;
               results1.push(this.ctx.stroke());
             }
             return results1;
@@ -53,9 +53,9 @@
       results = [];
       for (i = j = 0, len = points.length; j < len; i = ++j) {
         point = points[i];
-        this.ctx.fillStyle = COLORS.POINT;
+        this.ctx.fillStyle = new Color(COLORS.POINT.r, COLORS.POINT.g, COLORS.POINT.b, 0.6 + Math.sin(i + t * 0.05) * 0.3);
         this.ctx.beginPath();
-        size = 4 + Math.sin(i + t * 0.1);
+        size = 4 + Math.sin(i + t * 0.05);
         this.ctx.arc(point.x, point.y, size, 0, Math.PI * 2);
         this.ctx.closePath();
         results.push(this.ctx.fill());
@@ -85,7 +85,7 @@
         this.ctx.lineTo(point.x, point.y);
       }
       this.ctx.closePath();
-      this.ctx.strokeStyle = COLORS.STROKE;
+      this.ctx.strokeStyle = COLORS.LINE;
       return this.ctx.stroke();
     };
 
@@ -94,9 +94,9 @@
       results = [];
       for (i = j = 0, len = points.length; j < len; i = ++j) {
         point = points[i];
-        this.ctx.fillStyle = COLORS.POINT;
+        this.ctx.fillStyle = new Color(COLORS.POINT.r, COLORS.POINT.g, COLORS.POINT.b, 0.6 + Math.sin(i + t * 0.05) * 0.3);
         this.ctx.beginPath();
-        size = 4 + Math.sin(i + t * 0.1);
+        size = 4 + Math.sin(i + t * 0.05);
         this.ctx.arc(point.x, point.y, size, 0, Math.PI * 2);
         this.ctx.closePath();
         results.push(this.ctx.fill());
@@ -133,9 +133,9 @@
       results = [];
       for (i = j = 0, len = points.length; j < len; i = ++j) {
         point = points[i];
-        this.ctx.fillStyle = COLORS.POINT;
+        this.ctx.fillStyle = new Color(COLORS.POINT.r, COLORS.POINT.g, COLORS.POINT.b, 0.6 + Math.sin(i + t * 0.05) * 0.3);
         this.ctx.beginPath();
-        size = 4 + Math.sin(i + t * 0.1);
+        size = 4 + Math.sin(i + t * 0.05);
         this.ctx.arc(point.x, point.y, size, 0, Math.PI * 2);
         this.ctx.closePath();
         results.push(this.ctx.fill());
@@ -147,7 +147,29 @@
 
   })();
 
+  Color = (function() {
+    function Color(r1, g, b1, a) {
+      this.r = r1;
+      this.g = g;
+      this.b = b1;
+      this.a = a != null ? a : 1.0;
+    }
+
+    Color.prototype.toString = function() {
+      return "rgba(" + this.r + ", " + this.g + ", " + this.b + ", " + this.a + ")";
+    };
+
+    Color.blend = function(x, y, value) {
+      return new Color(Math.round(x.r * (1 - value) + y.r * value), Math.round(x.g * (1 - value) + y.g * value), Math.round(x.b * (1 - value) + y.b * value), Math.round(x.a * (1 - value) + y.a * value));
+    };
+
+    return Color;
+
+  })();
+
   BlendMover = (function() {
+    var easeInOutSine;
+
     function BlendMover() {
       this.initialT = 1;
     }
@@ -156,27 +178,25 @@
       return console.debug(i, src, dest, act, per);
     };
 
+    easeInOutSine = function(t, b, c, d) {
+      return -c / 2 * (Math.cos(Math.PI * t / d) - 1) + b;
+    };
+
     BlendMover.prototype.blend = function(v0, v1, t) {
-      var range, result;
-      range = Math.max(v0, v1) - Math.min(v0, v1);
-      if (v0 < v1) {
-        result = v0 + t * (range / 100);
-      }
-      if (v0 > v1) {
-        result = v0 - t * (range / 100);
-      }
-      return result;
+      return easeInOutSine(t, v0, v1 - v0, 100);
     };
 
     BlendMover.prototype.move = function(points) {
-      var i, j, len, newX, newY, point;
-      if (this.initialT < 100) {
+      var i, j, len, point;
+      if (this.initialT <= 100) {
         for (i = j = 0, len = points.length; j < len; i = ++j) {
           point = points[i];
-          newX = this.blend(point.blend.source.x, point.blend.destination.x, this.initialT);
-          newY = this.blend(point.blend.source.y, point.blend.destination.y, this.initialT);
-          point.x = newX;
-          point.y = newY;
+          if (point.x !== point.blend.destination.x) {
+            point.x = this.blend(point.blend.source.x, point.blend.destination.x, this.initialT);
+          }
+          if (point.y !== point.blend.destination.y) {
+            point.y = this.blend(point.blend.source.y, point.blend.destination.y, this.initialT);
+          }
         }
       }
       this.initialT++;
@@ -236,11 +256,11 @@
   margin = t = N_POINTS = 0;
 
   COLORS = {
-    STROKE: 'rgba(255, 255, 255, 0.2)',
-    FILL: 'rgba(20, 20, 20, 1.0)',
-    MOUSE: 'rgba(20, 40, 100, 0.3)',
-    LINE: 'rgba(20, 40, 100, 0.5)',
-    POINT: 'rgba(255, 255, 255, 0.5)'
+    STROKE: new Color(255, 255, 255, 0.2),
+    FILL: new Color(20, 20, 20, 1.0),
+    MOUSE: new Color(20, 40, 100, 0.3),
+    LINE: new Color(255, 255, 255, 0.1),
+    POINT: new Color(255, 255, 255, 0.9)
   };
 
   CONST = {
@@ -280,11 +300,23 @@
   };
 
   generatePoint = function(color) {
+    var x, y;
+    x = Math.ceil(Math.random() * canvas.width);
+    y = Math.ceil(Math.random() * canvas.height);
     return {
-      x: Math.ceil(Math.random() * canvas.width),
-      y: Math.ceil(Math.random() * canvas.height),
+      x: x,
+      y: y,
       c: color,
-      blend: {}
+      blend: {
+        source: {
+          x: x,
+          y: y
+        },
+        destination: {
+          x: Math.ceil(Math.random() * canvas.width),
+          y: Math.ceil(Math.random() * canvas.height)
+        }
+      }
     };
   };
 
@@ -293,11 +325,9 @@
       case "KeyQ":
         return currentMover = new CellMover();
       case "KeyW":
-        return currentMover = new CircleMover(canvas.width, canvas.height);
-      case "KeyE":
         generateCircleBlendTargets();
         return currentMover = new BlendMover();
-      case "KeyR":
+      case "KeyE":
         generateRandomBlendTargets();
         return currentMover = new BlendMover();
       case "KeyA":
@@ -355,6 +385,10 @@
   };
 
   renderDebug = function() {
+    if (t === 1) {
+      showControls();
+      document.onkeypress = handleKeyPress;
+    }
     currentMover.move(points, t);
     currentRenderer.render(points);
     currentRenderer.renderPoints(points);
@@ -411,10 +445,6 @@
       generateCircleBlendTargets();
       currentMover = new BlendMover();
     }
-    if (t === 2 * CONST.INTRO_TIME + 100) {
-      takeTime();
-      currentMover = new CircleMover(canvas.width, canvas.height);
-    }
     if (t === 3 * CONST.INTRO_TIME) {
       takeTime();
       currentMover = new CellMover();
@@ -423,10 +453,6 @@
       takeTime();
       generateCircleBlendTargets();
       currentMover = new BlendMover();
-    }
-    if (t === 5 * CONST.INTRO_TIME + 100) {
-      takeTime();
-      currentMover = new CircleMover(canvas.width, canvas.height);
     }
     if (t === 6 * CONST.INTRO_TIME) {
       takeTime();
@@ -448,12 +474,9 @@
       generateCircleBlendTargets();
       currentMover = new BlendMover();
     }
-    if (t === 9 * CONST.INTRO_TIME + 100) {
+    if (t === 10 * CONST.INTRO_TIME - 100) {
       takeTime();
       currentMover = new CircleMover(canvas.width, canvas.height);
-    }
-    if (t === 10 * CONST.INTRO_TIME) {
-      takeTime();
       currentRenderer = new LineRenderer(ctx, canvas.width, canvas.height);
     }
     if ((10 * CONST.INTRO_TIME < t && t < 11 * CONST.INTRO_TIME)) {
@@ -461,7 +484,7 @@
         points.push(generatePoint(COLORS.FILL));
       }
     }
-    if (t === 12 * CONST.INTRO_TIME) {
+    if (t === 11 * CONST.INTRO_TIME + 100) {
       takeTime();
       showControls();
       document.onkeypress = handleKeyPress;
