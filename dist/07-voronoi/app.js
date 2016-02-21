@@ -1,5 +1,5 @@
 (function() {
-  var COLORS, CONST, CellMover, CircleMover, DEBUG, LineRenderer, MoveToCircleMover, N_POINTS, PointsOnlyRenderer, RandomMover, VoronoiRenderer, addPoint, bbox, canvas, ctx, currentMover, currentRenderer, diagram, drawLine, drawPoints, generatePoint, generatePoints, handleKeyPress, id, init, margin, points, render, renderDebug, showControls, t, takeTime;
+  var BlendMover, COLORS, CONST, CellMover, CircleMover, DEBUG, LineRenderer, N_POINTS, PointsOnlyRenderer, VoronoiRenderer, addPoint, bbox, canvas, ctx, currentMover, currentRenderer, diagram, drawLine, drawPoints, generateCircleBlendTargets, generatePoint, generatePoints, generateRandomBlendTargets, handleKeyPress, id, init, margin, points, render, renderDebug, showControls, t, takeTime;
 
   VoronoiRenderer = (function() {
     function VoronoiRenderer(ctx1, width, height) {
@@ -147,63 +147,42 @@
 
   })();
 
-  RandomMover = (function() {
-    function RandomMover() {}
-
-    RandomMover.prototype.blend = function(x, y, t) {
-      var range;
-      x = Math.ceil(x);
-      y = Math.ceil(y);
-      t = Math.ceil(t);
-      range = Math.max(x, y) - Math.min(x, y);
-      return Math.min(x, y) + t * (range / 100);
-    };
-
-    RandomMover.prototype.move = function(points, t) {
-      var i, j, len, point, results;
-      results = [];
-      for (i = j = 0, len = points.length; j < len; i = ++j) {
-        point = points[i];
-        point.x = this.blend(point.x, point.origin.x, t % 2);
-        results.push(point.y = this.blend(point.y, point.origin.y, t % 2));
-      }
-      return results;
-    };
-
-    return RandomMover;
-
-  })();
-
-  MoveToCircleMover = (function() {
-    function MoveToCircleMover(width, height) {
-      this.centerX = width / 2;
-      this.centerY = height / 2;
-      this.r = height / 4;
+  BlendMover = (function() {
+    function BlendMover() {
+      this.initialT = 1;
     }
 
-    MoveToCircleMover.prototype.blend = function(x, y, t) {
-      var range;
-      x = Math.ceil(x);
-      y = Math.ceil(y);
-      t = Math.ceil(t);
-      range = Math.max(x, y) - Math.min(x, y);
-      return Math.min(x, y) + t * (range / 100);
+    BlendMover.prototype.out = function(i, src, dest, act, per) {
+      return console.debug(i, src, dest, act, per);
     };
 
-    MoveToCircleMover.prototype.move = function(points, t) {
-      var i, j, len, newX, newY, point, results;
-      results = [];
-      for (i = j = 0, len = points.length; j < len; i = ++j) {
-        point = points[i];
-        newX = this.centerX + this.r * Math.cos(2 * (i + 1) * Math.PI / points.length);
-        point.x = this.blend(point.x, newX, t % 10);
-        newY = this.centerY + this.r * Math.sin(2 * (i + 1) * Math.PI / points.length);
-        results.push(point.y = this.blend(point.y, newY, t % 10));
+    BlendMover.prototype.blend = function(v0, v1, t) {
+      var range, result;
+      range = Math.max(v0, v1) - Math.min(v0, v1);
+      if (v0 < v1) {
+        result = v0 + t * (range / 100);
       }
-      return results;
+      if (v0 > v1) {
+        result = v0 - t * (range / 100);
+      }
+      return result;
     };
 
-    return MoveToCircleMover;
+    BlendMover.prototype.move = function(points) {
+      var i, j, len, newX, newY, point;
+      if (this.initialT < 100) {
+        for (i = j = 0, len = points.length; j < len; i = ++j) {
+          point = points[i];
+          newX = this.blend(point.blend.source.x, point.blend.destination.x, this.initialT);
+          newY = this.blend(point.blend.source.y, point.blend.destination.y, this.initialT);
+          point.x = newX;
+          point.y = newY;
+        }
+      }
+      this.initialT++;
+    };
+
+    return BlendMover;
 
   })();
 
@@ -266,7 +245,7 @@
 
   CONST = {
     N_POINTS: 37,
-    INTERVAL: 15,
+    INTERVAL: 25,
     INTRO_TIME: 0
   };
 
@@ -278,7 +257,6 @@
     canvas = document.getElementsByTagName('canvas')[0];
     canvas.height = window.innerHeight - 124;
     canvas.width = window.innerWidth;
-    document.onkeypress = handleKeyPress;
     ctx = canvas.getContext('2d');
     ctx.fillStyle = COLORS.FILL;
     ctx.fillRect(0, 0, canvas.width, canvas.height);
@@ -303,13 +281,10 @@
 
   generatePoint = function(color) {
     return {
-      x: Math.random() * canvas.width,
-      y: Math.random() * canvas.height,
+      x: Math.ceil(Math.random() * canvas.width),
+      y: Math.ceil(Math.random() * canvas.height),
       c: color,
-      origin: {
-        x: Math.random() * canvas.width,
-        y: Math.random() * canvas.height
-      }
+      blend: {}
     };
   };
 
@@ -320,9 +295,11 @@
       case "KeyW":
         return currentMover = new CircleMover(canvas.width, canvas.height);
       case "KeyE":
-        return currentMover = new MoveToCircleMover(canvas.width, canvas.height);
+        generateCircleBlendTargets();
+        return currentMover = new BlendMover();
       case "KeyR":
-        return currentMover = new RandomMover(canvas.width, canvas.height);
+        generateRandomBlendTargets();
+        return currentMover = new BlendMover();
       case "KeyA":
         return currentRenderer = new VoronoiRenderer(ctx, canvas.width, canvas.height);
       case "KeyS":
@@ -356,10 +333,7 @@
       x: event.pageX,
       y: event.pageY,
       c: COLORS.MOUSE,
-      r: {
-        x: Math.random(),
-        y: Math.random()
-      }
+      blend: {}
     });
   };
 
@@ -387,6 +361,41 @@
     return t = requestAnimationFrame(renderDebug);
   };
 
+  generateRandomBlendTargets = function() {
+    var j, len, point, results;
+    results = [];
+    for (j = 0, len = points.length; j < len; j++) {
+      point = points[j];
+      point.blend.source = {
+        x: point.x,
+        y: point.y
+      };
+      results.push(point.blend.destination = {
+        x: canvas.width * Math.random(),
+        y: canvas.height * Math.random()
+      });
+    }
+    return results;
+  };
+
+  generateCircleBlendTargets = function() {
+    var i, j, len, point, r, results;
+    results = [];
+    for (i = j = 0, len = points.length; j < len; i = ++j) {
+      point = points[i];
+      point.blend.source = {
+        x: point.x,
+        y: point.y
+      };
+      r = canvas.height / 4;
+      results.push(point.blend.destination = {
+        x: canvas.width / 2 + r * Math.cos(2 * (i + 1) * Math.PI / points.length),
+        y: canvas.height / 2 + r * Math.sin(2 * (i + 1) * Math.PI / points.length)
+      });
+    }
+    return results;
+  };
+
   render = function() {
     if (t === 1) {
       takeTime();
@@ -399,7 +408,8 @@
     }
     if (t === 2 * CONST.INTRO_TIME) {
       takeTime();
-      currentMover = new MoveToCircleMover(canvas.width, canvas.height);
+      generateCircleBlendTargets();
+      currentMover = new BlendMover();
     }
     if (t === 2 * CONST.INTRO_TIME + 100) {
       takeTime();
@@ -411,7 +421,8 @@
     }
     if (t === 5 * CONST.INTRO_TIME) {
       takeTime();
-      currentMover = new MoveToCircleMover(canvas.width, canvas.height);
+      generateCircleBlendTargets();
+      currentMover = new BlendMover();
     }
     if (t === 5 * CONST.INTRO_TIME + 100) {
       takeTime();
@@ -424,7 +435,8 @@
     }
     if (t === 7 * CONST.INTRO_TIME) {
       takeTime();
-      currentMover = new RandomMover(ctx, canvas.width, canvas.height);
+      generateRandomBlendTargets();
+      currentMover = new BlendMover();
     }
     if ((8 * CONST.INTRO_TIME < t && t < 9 * CONST.INTRO_TIME)) {
       if (t % CONST.INTERVAL === 0 && points.length > 2) {
@@ -433,7 +445,8 @@
     }
     if (t === 9 * CONST.INTRO_TIME) {
       takeTime();
-      currentMover = new MoveToCircleMover(canvas.width, canvas.height);
+      generateCircleBlendTargets();
+      currentMover = new BlendMover();
     }
     if (t === 9 * CONST.INTRO_TIME + 100) {
       takeTime();
@@ -451,6 +464,7 @@
     if (t === 12 * CONST.INTRO_TIME) {
       takeTime();
       showControls();
+      document.onkeypress = handleKeyPress;
     }
     currentMover.move(points, t);
     currentRenderer.render(points);

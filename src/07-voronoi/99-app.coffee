@@ -13,7 +13,7 @@ COLORS =
 
 CONST =
     N_POINTS: 37
-    INTERVAL: 15
+    INTERVAL: 25
     INTRO_TIME: 0
 
 DEBUG =
@@ -25,7 +25,6 @@ init = ->
     canvas.height = window.innerHeight - 124 # magic number... height of help + player
     canvas.width = window.innerWidth
     # canvas.onclick = addPoint
-    document.onkeypress = handleKeyPress
     # init context
     ctx = canvas.getContext('2d')
     ctx.fillStyle = COLORS.FILL
@@ -48,20 +47,22 @@ generatePoints = (n) ->
 
 generatePoint = (color) ->
     {
-        x: Math.random() * canvas.width
-        y: Math.random() * canvas.height
+        x: Math.ceil(Math.random() * canvas.width)
+        y: Math.ceil(Math.random() * canvas.height)
         c: color
-        origin:
-            x: Math.random() * canvas.width
-            y: Math.random() * canvas.height
+        blend: {}
     }
 
 handleKeyPress = (e) ->
     switch e.code
         when "KeyQ" then currentMover = new CellMover()
         when "KeyW" then currentMover = new CircleMover(canvas.width, canvas.height)
-        when "KeyE" then currentMover = new MoveToCircleMover(canvas.width, canvas.height)
-        when "KeyR" then currentMover = new RandomMover(canvas.width, canvas.height)
+        when "KeyE"
+            generateCircleBlendTargets()
+            currentMover = new BlendMover()
+        when "KeyR"
+            generateRandomBlendTargets()
+            currentMover = new BlendMover()
         when "KeyA" then currentRenderer = new VoronoiRenderer(ctx, canvas.width, canvas.height)
         when "KeyS" then currentRenderer = new LineRenderer(ctx, canvas.width, canvas.height)
         when "KeyD" then currentRenderer = new PointsOnlyRenderer(ctx, canvas.width, canvas.height)
@@ -80,7 +81,7 @@ addPoint = (event) ->
         x: event.pageX
         y: event.pageY
         c: COLORS.MOUSE
-        r: {x: Math.random(), y: Math.random()}
+        blend: {}
 
 takeTime = () ->
     DEBUG.TIME = Date.now() - DEBUG.TIME
@@ -98,6 +99,26 @@ renderDebug = () ->
 
     t = requestAnimationFrame renderDebug
 
+generateRandomBlendTargets = () ->
+    for point in points
+        point.blend.source =
+            x: point.x
+            y: point.y
+
+        point.blend.destination =
+            x: canvas.width * Math.random()
+            y: canvas.height * Math.random()
+
+generateCircleBlendTargets = () ->
+    for point, i in points
+        point.blend.source =
+            x: point.x
+            y: point.y
+        r = canvas.height / 4
+        point.blend.destination =
+            x: canvas.width / 2 + r * Math.cos(2 * (i + 1) * Math.PI / points.length)
+            y: canvas.height / 2 + r * Math.sin(2 * (i + 1) * Math.PI / points.length)
+
 render = () ->
     if t is 1
         takeTime()
@@ -107,7 +128,8 @@ render = () ->
             points.push generatePoint(COLORS.FILL)
     if t is 2 * CONST.INTRO_TIME
         takeTime()
-        currentMover = new MoveToCircleMover(canvas.width, canvas.height)
+        generateCircleBlendTargets()
+        currentMover = new BlendMover()
     if t is 2 * CONST.INTRO_TIME + 100
         takeTime()
         currentMover = new CircleMover(canvas.width, canvas.height)
@@ -116,7 +138,8 @@ render = () ->
         currentMover = new CellMover()
     if t is 5 * CONST.INTRO_TIME
         takeTime()
-        currentMover = new MoveToCircleMover(canvas.width, canvas.height)
+        generateCircleBlendTargets()
+        currentMover = new BlendMover()
     if t is 5 * CONST.INTRO_TIME + 100
         takeTime()
         currentMover = new CircleMover(canvas.width, canvas.height)
@@ -127,7 +150,8 @@ render = () ->
     # blend to random position
     if t is 7 * CONST.INTRO_TIME
         takeTime()
-        currentMover = new RandomMover(ctx, canvas.width, canvas.height)
+        generateRandomBlendTargets()
+        currentMover = new BlendMover()
     # slowly pop until points.length is 2
     if 8 * CONST.INTRO_TIME < t < 9 * CONST.INTRO_TIME
         if t % CONST.INTERVAL is 0 and points.length > 2
@@ -135,7 +159,8 @@ render = () ->
     # blend to circle Position
     if t is 9 * CONST.INTRO_TIME
         takeTime()
-        currentMover = new MoveToCircleMover(canvas.width, canvas.height)
+        generateCircleBlendTargets()
+        currentMover = new BlendMover()
     if t is 9 * CONST.INTRO_TIME + 100
         takeTime()
         currentMover = new CircleMover(canvas.width, canvas.height)
@@ -151,6 +176,7 @@ render = () ->
     if t is 12 * CONST.INTRO_TIME
         takeTime()
         showControls()
+        document.onkeypress = handleKeyPress
 
     currentMover.move(points, t)
     currentRenderer.render(points)
